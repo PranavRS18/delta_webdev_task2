@@ -10,30 +10,22 @@ html {
     overflow: hidden;
 }
 
-#world, #city {
+#world{
     position: absolute;
-    top: 2vh;
-    left: 2vw;
-    height: 99vw;
-    width: 99vw;
+    height: 100vw;
+    width: 100vw;
     background: #000;
     visibility: hidden;
 }
 
 #world {
-    border: 0.075rem solid limegreen;
+    border: 0.15rem solid limegreen;
     z-index: -1;
-}
-
-#city {
-    background-color: inherit;
-    border: 0.075rem solid limegreen;
 }
 
 #camera {
     width: 100vw;
     height: 100vh;
-    z-index: 100;
-    background-color: black;
-    image-rendering: pixelated;
+    background-color: #000;
+    border: 0.15rem solid black;
 }

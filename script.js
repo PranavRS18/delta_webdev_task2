@@ -1,10 +1,6 @@
 // DOM
-const remInPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
 const world = document.querySelector("#world")
-const worldCtx = world.getContext("2d");
-
-const city = document.querySelector("#city");
-const cityCtx = city.getContext("2d");
+const ctx = world.getContext("2d");
 
 const camera = document.querySelector("#camera");
 const cameraCtx = camera.getContext("2d");
@@ -12,170 +8,298 @@ const cameraCtx = camera.getContext("2d");
 world.width = world.clientWidth;
 world.height = world.clientHeight;
 
-city.width = world.clientWidth;
-city.height = world.clientHeight;
-
 camera.width = window.innerWidth;
 camera.height = window.innerHeight;
 
-let [cameraX, cameraY] = [world.getBoundingClientRect().left, world.getBoundingClientRect().top];
+// Relative Length
+const remInPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
 
-const nColumns = 11;
-const nRows = 11;
+// world Variables
+const nColumns = 7;
+const nRows = 7;
 const blockWidth = world.width / nColumns;
 const blockHeight = world.height / nRows;
 
-for (let col = 0; col < nColumns; col++) {
-    worldCtx.beginPath();
-    worldCtx.strokeStyle = "limegreen";
-    worldCtx.lineWidth = 0.075 * remInPx;
-    worldCtx.moveTo(col * blockWidth, 0);
-    worldCtx.lineTo(col * blockWidth, world.height);
-    worldCtx.stroke();
-    worldCtx.closePath();
-}
-
-for (let row = 0; row < nRows; row++) {
-    worldCtx.beginPath();
-    worldCtx.strokeStyle = "limegreen";
-    worldCtx.lineWidth = 0.075 * remInPx;
-    worldCtx.moveTo(0, row * blockHeight);
-    worldCtx.lineTo(world.width, row * blockHeight);
-    worldCtx.stroke();
-    worldCtx.closePath();
-}
-
-let rectX, rectY;
+// Grass
+const rectX = blockWidth / 10;
+const rectY = blockHeight / 10;
 const rectWidth = blockWidth * 4 / 5;
 const rectHeight = blockHeight * 4 / 5;
 
+// Building
 let buildingX, buildingY, nBuildings;
 const buildingWidth = rectWidth / 3;
 const buildingHeight = rectHeight / 3;
 let buildings = [];
+let blockBuildings = [];
 
-let shooterX, shooterY, shooterBuilding;
-let shooterRadius = buildingWidth / 15;
-let shooters = [];
-const shooterRange = shooterRadius * 24;
-const shooterArc = Math.PI * 9 / 32;
+// Shooter
+let shooterX, shooterY, shooterBuilding, shooterAngle;
+let shooterRadius = buildingWidth / 8;
+const shooterRange = shooterRadius * 21;
+const shooterArc = Math.PI * 7 / 36;
+const shooterSpeed = Math.PI / 350;
 
+// Key
 let keyX, keyY, nKeys;
-let keyRadius = buildingWidth / 15;
+let keyRadius = buildingWidth / 12;
 let keys = [];
+let blockKeys = [];
 
-// Buildings, Grass and Keys
-for (let col = 0; col < nColumns; col++) {
-    for (let row = 0; row < nRows; row++) {
-        rectX = blockWidth * (col + 1 / 10) ;
-        rectY = blockHeight * (row + 1 / 10) ;
+// Keys
+nKeys = 1 + Math.floor(Math.random() * 3);
+keys = []
 
-        worldCtx.beginPath();
-        worldCtx.fillStyle = "limegreen";
-        worldCtx.fillRect(rectX, rectY, rectWidth, rectHeight);
-        worldCtx.closePath();
+for (let key = 0; key < nKeys; key++) {
+    keyX = Math.random() * blockWidth;
+    keyY = Math.random() * blockHeight;
+    keys.push([keyX, keyY]);
+}
 
-        let blockBuildings = [];
-        nBuildings = 2 + Math.floor(Math.random() * 2);
+const global = new Map()
+global.set('0, 0', {
+    type : 'central',
+    buildings: [],
+    shooter: [0, 0, 0],
+    keys: keys
+})
+let blockData, globalBlockX, globalBlockY;
 
-        for(let building = 0; building < nBuildings; building++) {
-            buildingX = rectX + Math.floor(Math.random() * (rectWidth - buildingWidth));
-            buildingY = rectY + Math.floor(Math.random() * (rectHeight - buildingHeight));
-            blockBuildings.push([buildingX, buildingY]);
-            buildings.push([buildingX, buildingY]);
+function createBlock(globalX, globalY) {
+
+    // Buildings
+    nBuildings = 2 + Math.floor(Math.random() * 2);
+    buildings = []
+    for (let building = 0; building < nBuildings; building++) {
+        buildingX = rectX + Math.random() * (rectWidth - buildingWidth);
+        buildingY = rectY + Math.random() * (rectHeight - buildingHeight);
+        buildings.push([buildingX, buildingY, 3]);
+    }
+
+    // Shooter
+    shooterBuilding = buildings[0];
+    shooterX = shooterBuilding[0] + shooterRadius + Math.random() * (buildingWidth - 2 * shooterRadius);
+    shooterY = shooterBuilding[1] + shooterRadius + Math.random() * (buildingHeight - 2 * shooterRadius);
+
+    // Keys
+    nKeys = 2 + Math.ceil(Math.random() * 3);
+    keys = []
+
+    for (let key = 0; key < nKeys; key++) {
+        keyX = Math.random() * blockWidth;
+        keyY = Math.random() * blockHeight;
+        keys.push([keyX, keyY]);
+    }
+
+    global.set(`${globalX}, ${globalY}`, {
+        type : 'regular',
+        buildings : buildings,
+        shooter: [shooterX, shooterY, Math.random() * Math.PI * 2],
+        keys : keys
+    });
+
+}
+
+function drawBlock(worldX, worldY) {
+
+    globalBlockX = globalX + worldX - 3;
+    globalBlockY = worldY - globalY - 3;
+
+    if (!global.has(`${globalBlockX}, ${globalBlockY}`)) {
+        createBlock(globalBlockX, globalBlockY)
+    }
+
+    blockData = global.get(`${globalBlockX}, ${globalBlockY}`);
+
+    if (blockData.type === 'regular') {
+        ctx.fillStyle = 'limegreen';
+    }
+    else if (blockData.type === 'central') {
+        ctx.fillStyle = 'blue';
+    }
+
+    ctx.fillRect(worldX * blockWidth + rectX, worldY * blockHeight + rectY, rectWidth, rectHeight);
+
+    blockBuildings = blockData.buildings;
+    ctx.fillStyle = 'black';
+    for (let building = 0; building < blockBuildings.length; building++) {
+        buildingX = worldX * blockWidth + blockBuildings[building][0];
+        buildingY = worldY * blockHeight + blockBuildings[building][1];
+        ctx.fillRect(buildingX, buildingY, buildingWidth, buildingHeight);
+    }
+
+    blockKeys = blockData.keys;
+    ctx.fillStyle = 'orange';
+    for (let key = 0; key < blockKeys.length; key++) {
+        keyX = worldX * blockWidth + blockKeys[key][0];
+        keyY = worldY * blockHeight + blockKeys[key][1];
+
+        ctx.beginPath();
+        ctx.arc(keyX,
+            keyY,
+            keyRadius,
+            0,
+            Math.PI * 2,
+            false);
+        ctx.fill();
+        ctx.closePath();
+    }
+
+}
+
+function drawShooter(worldX, worldY) {
+
+    globalBlockX = globalX + worldX - 3;
+    globalBlockY = worldY - globalY - 3;
+    blockData = global.get(`${globalBlockX}, ${globalBlockY}`);
+
+    [shooterX, shooterY, shooterAngle] = blockData.shooter;
+    shooterX = worldX * blockWidth + shooterX;
+    shooterY = worldY * blockHeight + shooterY;
+    ctx.beginPath();
+    ctx.fillStyle = 'red';
+    ctx.arc(shooterX,
+        shooterY,
+        (blockData.type === 'regular') ? shooterRadius : 0,
+        0,
+        Math.PI * 2,
+        false);
+    ctx.fill();
+    ctx.closePath();
+
+
+    ctx.beginPath();
+    ctx.strokeStyle = "red";
+    ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+    ctx.moveTo(shooterX, shooterY);
+    ctx.arc(shooterX,
+        shooterY,
+        (blockData.type === 'regular') ? shooterRange : 0,
+        shooterAngle - shooterArc,
+        shooterAngle + shooterArc,
+        false);
+    ctx.lineTo(shooterX, shooterY);
+    ctx.stroke();
+    ctx.fill();
+    ctx.closePath();
+    blockData.shooter[2] += shooterSpeed;
+}
+
+function drawCity() {
+
+    // Block Separation
+    ctx.beginPath();
+    ctx.strokeStyle = "limegreen";
+    ctx.lineWidth = 0.1 * remInPx;
+    for (let col = 0; col < nColumns; col++) {
+        ctx.moveTo(col * blockWidth, 0)
+        ctx.lineTo(col * blockWidth, world.height)
+        ctx.stroke();
+        ctx.closePath();
+    }
+
+    for (let row = 0; row < nColumns; row++) {
+        ctx.moveTo(0, row * blockHeight)
+        ctx.lineTo(world.width, row * blockHeight)
+        ctx.stroke();
+        ctx.closePath();
+    }
+
+    if (playerX > initialPlayerX + blockWidth * 1.75) {
+        playerX -= blockWidth;
+        cameraX -= blockWidth;
+        globalX++;
+    }
+    else if (playerX < initialPlayerX - blockWidth * 1.75) {
+        playerX += blockWidth;
+        cameraX += blockWidth;
+        globalX--;
+    }
+
+    if (playerY > initialPlayerY + blockHeight * 1.75) {
+        playerY -= blockHeight;
+        cameraY -= blockHeight;
+        globalY--;
+    }
+    else if (playerY < initialPlayerY - blockHeight * 1.75) {
+        playerY += blockHeight;
+        cameraY += blockHeight;
+        globalY++;
+    }
+
+    for (let col = 0; col < nColumns; col++) {
+        for (let row = 0; row < nRows; row++) {
+            drawBlock(col, row);
         }
+    }
 
-        shooterBuilding = blockBuildings[Math.floor(Math.random() * blockBuildings.length)];
-        let [shooterBuildingX, shooterBuildingY] = shooterBuilding;
-
-        shooterX = shooterBuildingX + Math.floor(Math.random() * (buildingWidth - shooterRadius));
-        shooterY = shooterBuildingY + Math.floor(Math.random() * (buildingHeight - shooterRadius));
-        shooters.push([shooterX, shooterY, Math.random() * Math.PI * 2]);
-
-        nKeys = 3 + Math.random() * 3;
-
-        for (let key = 0; key < nKeys; key++) {
-            keyX = (col * blockWidth) + Math.floor(Math.random() * blockWidth);
-            keyY = (row * blockHeight) + Math.floor(Math.random() * blockHeight);
-            keys.push([keyX, keyY]);
+    for (let col = 0; col < nColumns; col++) {
+        for (let row = 0; row < nRows; row++) {
+            drawShooter(col, row);
         }
     }
 }
 
-// Draw Buildings, Keys and Shooters
-function drawCanvas() {
-    buildings.forEach(building => {
-        let [buildingNewX, buildingNewY] = building;
-        cityCtx.beginPath();
-        cityCtx.fillStyle = "black";
-        cityCtx.fillRect(buildingNewX, buildingNewY, buildingWidth, buildingHeight);
-        cityCtx.closePath();
+// Player
+const playerRadius = 0.8 * remInPx;
+const playerSpeed = 0.15 * remInPx;
+const keysPressed = [];
+const initialPlayerX = world.width / 2;
+const initialPlayerY = world.height / 2;
+let playerX = initialPlayerX;
+let playerY = initialPlayerY;
+let globalX = 0;
+let globalY = 0;
 
-    })
+// Track Keys Pressed
+window.addEventListener('keydown', (event) => {
+    keysPressed[event.key.toLowerCase()] = true;
+});
+window.addEventListener('keyup', (event) => {
+    keysPressed[event.key.toLowerCase()] = false;
+});
 
-    shooters.forEach(shooter => {
-        let [shooterNewX, shooterNewY] = shooter;
+function playerMove() {
 
-        cityCtx.beginPath();
-        cityCtx.fillStyle = "red";
-        cityCtx.arc(shooterNewX, shooterNewY, shooterRadius, 0, Math.PI * 2, false);
-        cityCtx.fill();
-        cityCtx.closePath();
-    })
+    // Player
+    if (keysPressed['w']) playerY -= playerSpeed;
+    if (keysPressed['s']) playerY += playerSpeed;
+    if (keysPressed['a']) playerX -= playerSpeed;
+    if (keysPressed['d']) playerX += playerSpeed;
 
-    keys.forEach(key => {
-        let [keyNewX, keyNewY] = key;
+    // Camera
+    if (playerX > initialPlayerX + blockWidth * 3 / 4 || playerX < initialPlayerX - blockWidth * 3 / 4) {
+        if (keysPressed['a']) cameraX -= playerSpeed;
+        if (keysPressed['d']) cameraX += playerSpeed;
+    }
 
-        cityCtx.beginPath();
-        cityCtx.fillStyle = "yellow";
-        cityCtx.arc(keyNewX, keyNewY, keyRadius, 0, Math.PI * 2, false);
-        cityCtx.fill();
-        cityCtx.closePath();
-    })
+    if (playerY > initialPlayerY + blockHeight * 3 / 4 || playerY < initialPlayerY - blockHeight * 3 / 4) {
+        if (keysPressed['w']) cameraY -= playerSpeed;
+        if (keysPressed['s']) cameraY += playerSpeed;
+    }
+
+    ctx.beginPath();
+    ctx.fillStyle = 'white';
+    ctx.arc(playerX, playerY, playerRadius, 0, Math.PI * 2, false);
+    ctx.fill();
+    ctx.closePath();
 }
-function onCamera() {
 
-    const cameraWidth = camera.width / 5 * 2;
-    const cameraHeight = camera.height / 5 * 2;
-
-    cameraCtx.clearRect(0, 0, camera.width, camera.height);
-    cameraCtx.drawImage(
-        world,
-        0, 0,
-        cameraWidth, cameraHeight,
-        0, 0,
-        window.innerWidth, window.innerHeight
-    )
-    cameraCtx.drawImage(
-        city,
-        0, 0,
-        cameraWidth, cameraHeight,
-        0, 0,
-        window.innerWidth, window.innerHeight
-    )
-}
+let cameraX = blockWidth;
+let cameraY = blockHeight * 2;
 
 function animate() {
-    cityCtx.clearRect(0, 0, world.clientWidth, world.clientHeight);
-    drawCanvas();
-    shooters.forEach((shooter, idx, shooters) => {
-        let [shooterNewX, shooterNewY, shooterNewAngle] = shooter;
+    ctx.clearRect(0, 0, world.clientWidth, world.clientHeight);
+    cameraCtx.clearRect(0, 0, camera.clientWidth, camera.clientHeight);
+    drawCity();
+    playerMove();
 
-        cityCtx.beginPath();
-        cityCtx.strokeStyle = "red";
-        cityCtx.fillStyle = "rgba(255, 0, 0, 0.3";
-        cityCtx.moveTo(shooterNewX, shooterNewY);
-        cityCtx.arc(shooterNewX, shooterNewY, shooterRange,
-            shooterNewAngle - shooterArc, shooterNewAngle + shooterArc, false);
-        cityCtx.lineTo(shooterNewX, shooterNewY);
-        cityCtx.stroke();
-        cityCtx.fill();
-        cityCtx.closePath();
-
-        shooters[idx] = [shooterNewX, shooterNewY, shooterNewAngle + (Math.PI / 100)]
-    });
-
-    onCamera();
+    cameraCtx.drawImage(
+        world,
+        cameraX, cameraY,
+        world.width * 5 / 7, world.height * 3 / 7,
+        0, 0,
+        window.innerWidth, window.innerHeight);
     requestAnimationFrame(animate);
 }
 requestAnimationFrame(animate);
