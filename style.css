@@ -10,13 +10,14 @@ html {
     overflow: hidden;
 }
 
-canvas {
+#world, #city {
     position: absolute;
-    top: 14vh;
-    left: 26vw;
-    height: 72vh;
-    width: 48vw;
+    top: 2vh;
+    left: 2vw;
+    height: 99vw;
+    width: 99vw;
     background: #000;
+    visibility: hidden;
 }
 
 #world {
@@ -30,5 +31,9 @@ canvas {
 }
 
 #camera {
-    display: none;
+    width: 100vw;
+    height: 100vh;
+    z-index: 100;
+    background-color: black;
+    image-rendering: pixelated;
 }

@@ -6,14 +6,22 @@ const worldCtx = world.getContext("2d");
 const city = document.querySelector("#city");
 const cityCtx = city.getContext("2d");
 
+const camera = document.querySelector("#camera");
+const cameraCtx = camera.getContext("2d");
+
 world.width = world.clientWidth;
 world.height = world.clientHeight;
 
 city.width = world.clientWidth;
 city.height = world.clientHeight;
 
-const nColumns = 12;
-const nRows = 12;
+camera.width = window.innerWidth;
+camera.height = window.innerHeight;
+
+let [cameraX, cameraY] = [world.getBoundingClientRect().left, world.getBoundingClientRect().top];
+
+const nColumns = 11;
+const nRows = 11;
 const blockWidth = world.width / nColumns;
 const blockHeight = world.height / nRows;
 
@@ -98,7 +106,6 @@ for (let col = 0; col < nColumns; col++) {
 function drawCanvas() {
     buildings.forEach(building => {
         let [buildingNewX, buildingNewY] = building;
-
         cityCtx.beginPath();
         cityCtx.fillStyle = "black";
         cityCtx.fillRect(buildingNewX, buildingNewY, buildingWidth, buildingHeight);
@@ -107,7 +114,6 @@ function drawCanvas() {
     })
 
     shooters.forEach(shooter => {
-
         let [shooterNewX, shooterNewY] = shooter;
 
         cityCtx.beginPath();
@@ -118,7 +124,6 @@ function drawCanvas() {
     })
 
     keys.forEach(key => {
-
         let [keyNewX, keyNewY] = key;
 
         cityCtx.beginPath();
@@ -128,12 +133,33 @@ function drawCanvas() {
         cityCtx.closePath();
     })
 }
+function onCamera() {
+
+    const cameraWidth = camera.width / 5 * 2;
+    const cameraHeight = camera.height / 5 * 2;
+
+    cameraCtx.clearRect(0, 0, camera.width, camera.height);
+    cameraCtx.drawImage(
+        world,
+        0, 0,
+        cameraWidth, cameraHeight,
+        0, 0,
+        window.innerWidth, window.innerHeight
+    )
+    cameraCtx.drawImage(
+        city,
+        0, 0,
+        cameraWidth, cameraHeight,
+        0, 0,
+        window.innerWidth, window.innerHeight
+    )
+}
 
 function animate() {
     cityCtx.clearRect(0, 0, world.clientWidth, world.clientHeight);
     drawCanvas();
     shooters.forEach((shooter, idx, shooters) => {
-        [shooterNewX, shooterNewY, shooterNewAngle] = shooter;
+        let [shooterNewX, shooterNewY, shooterNewAngle] = shooter;
 
         cityCtx.beginPath();
         cityCtx.strokeStyle = "red";
@@ -148,6 +174,8 @@ function animate() {
 
         shooters[idx] = [shooterNewX, shooterNewY, shooterNewAngle + (Math.PI / 100)]
     });
+
+    onCamera();
     requestAnimationFrame(animate);
 }
 requestAnimationFrame(animate);
