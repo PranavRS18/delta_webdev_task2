@@ -1,0 +1,31 @@
+* {
+    margin: 0;
+    padding: 0;
+    border : 0;
+}
+
+html {
+    width: 100dvw;
+    height: 100dvh;
+}
+
+#world {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 200vh;
+    height: 640vh;
+    background-color: black;
+    overflow: hidden;
+}
+
+#game {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 200vh;
+    height: 640vh;
+    background-color: inherit;
+    z-index: 1;
+    overflow: hidden;
+}
