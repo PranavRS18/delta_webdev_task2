@@ -7,25 +7,28 @@
 html {
     width: 100dvw;
     height: 100dvh;
+    overflow: hidden;
+}
+
+canvas {
+    position: absolute;
+    top: 14vh;
+    left: 26vw;
+    height: 72vh;
+    width: 48vw;
+    background: #000;
 }
 
 #world {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 200vh;
-    height: 640vh;
-    background-color: black;
-    overflow: hidden;
+    border: 0.075rem solid limegreen;
+    z-index: -1;
 }
 
-#game {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 200vh;
-    height: 640vh;
+#city {
     background-color: inherit;
-    z-index: 1;
-    overflow: hidden;
+    border: 0.075rem solid limegreen;
+}
+
+#camera {
+    display: none;
 }
