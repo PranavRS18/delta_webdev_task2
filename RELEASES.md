@@ -20,3 +20,11 @@
 * Added Infinite Procedural Map with Good Performance and Good Resolution
 * Shooters, Keys and Player Movement with Buildings Added
 * Shooters and Keys are non-Interactable
+
+# v1.0
+* Added Key Collection, Keys to Shards and Shards to System Health Conversion
+* Added Shooter Interactions
+* Added Scores, Pause, Key Count, Shard Count, and Global Tracking
+* High Score using Local Storage
+* Building Collisions
+* Pause, Resume and Restart

@@ -4,11 +4,46 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>CyberScape</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel = "stylesheet" type = "text/css" href = "style.css">
 </head>
 <body>
     <canvas id="world"></canvas>
     <canvas id = "camera"></canvas>
+    <div id = "details" class = "box">
+        System Health :
+        <br>
+        Keys :
+        <br>
+        Shards :
+    </div>
+    <div id = "position" class = "box">
+        Global Player Position
+        <br>
+        X :
+        <br>
+        Y :
+    </div>
+    <div id = "player" class = "box">
+        Player Health :
+        <br>
+        Player Score :
+    </div>
+    <div id = "result" class = "box big">
+        GAME OVER
+        <br>
+        Player Score :
+    </div>
+    <div id = "damage" class = "box big"></div>
+    <div id = "menuScreen" class = "box big">
+        <div id = "menu">
+            <button id = "resume" class = "menuButtons">RESUME</button>
+            <button id = "restart" class = "menuButtons">RESTART</button>
+            <button id = "prefs" class = "menuButtons">PREFERENCES</button>
+            <button id = "mainMenu" class = "menuButtons">MAIN MENU</button>
+        </div>
+    </div>
+    <button id = "pause">PAUSE</button>
 </body>
 <script src = "script.js"></script>
 </html>
