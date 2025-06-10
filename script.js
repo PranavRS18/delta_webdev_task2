@@ -17,13 +17,20 @@ const position = document.querySelector("#position");
 const details = document.querySelector("#details");
 const player = document.querySelector("#player");
 const result = document.querySelector("#result");
+const resultText = document.querySelector("#resultText");
 const pause = document.querySelector("#pause");
 const menuScreen = document.querySelector("#menuScreen");
+const home = document.querySelector("#home");
+const start = document.querySelector("#start");
+const show = document.querySelector("#show");
 const resume = document.querySelector("#resume");
 const restart = document.querySelector("#restart");
 const damage = document.querySelector("#damage");
+const retry = document.querySelector("#retry");
+const mainMenu = document.querySelector("#mainMenu");
 
 // World Variables
+let isStart = true;
 let isPlay = true;
 let timeElapsed = 0;
 const nColumns = 7;
@@ -33,6 +40,7 @@ const blockHeight = world.height / nRows;
 let playerKeys = 0;
 let playerShards = 0;
 let playerHealth = 50;
+const playerHealthDecrease = 0.4;
 let playerScore = 0;
 let playerAngle, nearestX, nearestY, distX, distY;
 
@@ -41,6 +49,7 @@ if (localStorage.getItem('highScore') !== null) {
 } else {
     highScore = 0;
 }
+show.innerText = `HIGH SCORE : ${highScore}`;
 
 // Grass
 const rectX = blockWidth / 10;
@@ -59,7 +68,7 @@ let renderedBuildings = [];
 // Shooter
 let shooterX, shooterY, shooterBuilding, shooterAngle;
 let shooterRadius = buildingWidth / 8;
-const shooterRange = buildingWidth * 2.2;
+const shooterRange = buildingWidth * 1.85;
 const shooterArc = Math.PI * 7 / 36;
 const shooterSpeed = Math.PI / 350;
 
@@ -89,9 +98,18 @@ chunksVisited.add('0, 0');
 let chunkSize = 7;
 let chunkX, chunkY, minChunkX, minChunkY, maxChunkX, maxChunkY, shuffledBlockType, shuffledBlockTypes, paddingBlock;
 
-const blockTypes = ['central', 'base', 'factory', 'safe']
+const blockTypes = ['central', 'base', 'safe', 'factory']
 const global = new Map();
 let blockData, globalBlockX, globalBlockY, blockX, blockY, isSafe;
+let globalXChange = '0';
+
+const bots = [];
+const botFactories = new Map();
+const botGenerateTimer = 8;
+const botRadius = buildingWidth / 8;
+const botRange = buildingWidth * 1.25;
+const botSpeed = 0.075 * remInPx;
+let lastBotProduced, moves, move;
 
 const baseChunkBorder = Math.floor(chunkSize / 2);
 function createBaseChunk() {
@@ -103,7 +121,7 @@ function createBaseChunk() {
                 type : 'safe',
                 buildings: [],
                 shooter: [0, 0, 0],
-                keys: createKeys()
+                keys: []
             });
             continue;
         } else if (shuffledBlockType === 'central') {
@@ -125,6 +143,8 @@ function createBaseChunk() {
             blockX = -1 * baseChunkBorder + Math.floor(Math.random() * (Math.floor(chunkSize / 2) - paddingBlock));
             blockY = -1 * baseChunkBorder + Math.floor(Math.random() * (Math.floor(chunkSize / 2) - paddingBlock));
         }
+
+        if (shuffledBlockType === 'factory') botFactories.set(`${blockX}, ${blockY}`, botGenerateTimer)
 
         global.set(`${blockX}, ${blockY}`, {
             type: shuffledBlockType,
@@ -154,7 +174,7 @@ function createChunk(chunkX, chunkY) {
     shuffledBlockTypes = shuffleArray(blockTypes)
     for (let block = 0; block < blockTypes.length; block++) {
         shuffledBlockType = shuffledBlockTypes[block];
-        if ((shuffledBlockType === 'central' || shuffledBlockType === 'factory')) {
+        if ((shuffledBlockType === 'safe' || shuffledBlockType === 'factory')) {
             paddingBlock = 0;
         }
         else {
@@ -178,6 +198,7 @@ function createChunk(chunkX, chunkY) {
             blockY = minChunkY + Math.floor(Math.random() * (Math.floor(chunkSize / 2) - paddingBlock));
         }
 
+        if (shuffledBlockType === 'factory') botFactories.set(`${blockX}, ${blockY}`, botGenerateTimer)
 
         global.set(`${blockX}, ${blockY}`, {
             type : shuffledBlockType,
@@ -206,10 +227,14 @@ function createBlock(globalX, globalY) {
     shooterX = shooterBuilding[0] + shooterRadius + Math.random() * (buildingWidth - 2 * shooterRadius);
     shooterY = shooterBuilding[1] + shooterRadius + Math.random() * (buildingHeight - 2 * shooterRadius);
 
+    if (globalXChange === '+') shooterAngle = (shooterArc + 3 * Math.PI / 2) + Math.random() * (Math.PI - 2 * shooterArc);
+    else if (globalXChange === '-') shooterAngle = (shooterArc + Math.PI / 2) + Math.random() * (Math.PI - 2 * shooterArc);
+    else shooterAngle = Math.PI * 2 * Math.random();
+
     global.set(`${globalX}, ${globalY}`, {
         type : 'regular',
         buildings : buildings,
-        shooter: [shooterX, shooterY, Math.random() * Math.PI * 2],
+        shooter: [shooterX, shooterY, shooterAngle],
         keys : createKeys()
     });
 
@@ -247,7 +272,7 @@ function createShards(rectX, rectY) {
         if (keysToShards <= playerKeys) {
             playerKeys -= keysToShards;
             playerShards++;
-            playerScore += 30;
+            playerScore += 20;
         }
     }
 }
@@ -258,7 +283,7 @@ function shardsToHealth(rectX, rectY) {
         if (playerShards) {
             playerShards--;
             systemHealth += 20;
-            playerScore += 50;
+            playerScore += 25;
         }
     }
 }
@@ -282,7 +307,7 @@ function drawBlock(worldX, worldY) {
     }
 
     if (!global.has(`${globalBlockX}, ${globalBlockY}`)) {
-        createBlock(globalBlockX, globalBlockY)
+        createBlock(globalBlockX, globalBlockY);
     }
 
     blockData = global.get(`${globalBlockX}, ${globalBlockY}`);
@@ -391,7 +416,7 @@ function drawShooter(worldX, worldY) {
     ctx.closePath();
     blockData.shooter[2] += shooterSpeed;
 
-    if ((playerX - shooterX) ** 2 + (playerY - shooterY) ** 2 <= (playerRadius + shooterRange) ** 2 && blockData.type !== 'safe'
+    if ((playerX - shooterX) ** 2 + (playerY - shooterY) ** 2 <= (playerRadius + shooterRange) ** 2 && blockData.type === 'regular'
     && playerHealth > 0) {
         playerAngle = Math.atan2(playerY - shooterY, playerX - shooterX);
         shooterAngle = shooterAngle % (Math.PI * 2);
@@ -399,7 +424,7 @@ function drawShooter(worldX, worldY) {
         playerAngle = (playerAngle > Math.PI) ? playerAngle - 2 * Math.PI : playerAngle;
         if (playerAngle > shooterAngle - shooterArc &&
         playerAngle < shooterAngle + shooterArc && !isSafe) {
-            playerHealth -= 0.5;
+            playerHealth -= playerHealthDecrease;
             damage.style.opacity = '1';
         } else {
         }
@@ -432,11 +457,13 @@ function drawCity() {
         playerX -= blockWidth;
         cameraX -= blockWidth;
         globalX++;
+        globalXChange = "+";
     }
     else if (playerX < initialPlayerX - blockWidth * 1.75) {
         playerX += blockWidth;
         cameraX += blockWidth;
         globalX--;
+        globalXChange = "-";
     }
 
     if (playerY > initialPlayerY + blockHeight * 1.75) {
@@ -450,11 +477,15 @@ function drawCity() {
         globalY++;
     }
 
-    chunkX = Math.floor((globalX + 7) / chunkSize);
-    chunkY = Math.floor((globalY + 6) / chunkSize);
+    chunkX = Math.floor((globalX + 4) / chunkSize);
+    chunkY = Math.floor((globalY + 4) / chunkSize);
 
-    if (!chunksVisited.has(`${chunkX}, ${chunkY}`)) {
-        createChunk(chunkX, chunkY);
+    for (let X = -1; X < 2; X++){
+        for (let Y = -1; Y < 2; Y++){
+            if (!chunksVisited.has(`${chunkX + X}, ${chunkY + Y}`)) {
+                createChunk(chunkX + X, chunkY + Y);
+            }
+        }
     }
 
     // Draw City
@@ -469,6 +500,53 @@ function drawCity() {
             drawShooter(col, row);
         }
     }
+}
+
+function botMove() {
+    bots.forEach(bot => {
+        if (bot[0] === bot[2] && bot[1] === bot[3]) {
+            moves = [bot[0] - blockWidth, bot[0] + blockWidth].concat(
+                [bot[1] - blockHeight, bot[1] + blockHeight]);
+            move = Math.floor(Math.random() * (moves.length - 1))
+
+            if (move < 2) bot[2] = moves[move]
+            else bot[3] = moves[move]
+
+        } else {
+            if (bot[2] !== bot[0]) {
+                if (Math.abs(bot[2] - bot[0]) > botSpeed) bot[0] += (bot[2] - bot[0] > 0 ? 1 : -1) * botSpeed;
+                else bot[0] = bot[2]
+            }
+            else {
+                if (Math.abs(bot[3] - bot[1]) > botSpeed) bot[1] += (bot[3] - bot[1] > 0 ? 1 : -1) * botSpeed;
+                else bot[3] = bot[1]
+            }
+        }
+    });
+}
+
+function drawBots() {
+    bots.forEach(bot => {
+        ctx.beginPath();
+        ctx.strokeStyle = 'black';
+        ctx.fillStyle = 'rgb(159, 159, 159)';
+        ctx.arc(bot[0] + (3 - globalX) * blockWidth, (3 + globalY) * blockHeight - bot[1], botRadius, 0, 2 * Math.PI, false);
+        ctx.stroke();
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.strokeStyle = 'gray';
+        ctx.fillStyle = 'rgba(63, 63, 63, 0.4)';
+        ctx.arc(bot[0] + (3 - globalX) * blockWidth, (3 + globalY) * blockHeight - bot[1], botRange, 0, 2 * Math.PI, false);
+        ctx.stroke();
+        ctx.fill();
+
+        if ((botRange + playerRadius) ** 2 > (bot[0] + (3 - globalX) * blockWidth - playerX) ** 2 + ((3 + globalY) * blockHeight - bot[1] - playerY) ** 2 && !isSafe) {
+            playerHealth -= playerHealthDecrease;
+            damage.style.opacity = '1';
+        }
+
+    })
 }
 
 // Player
@@ -504,7 +582,7 @@ function playerMove() {
        isCollidedDY ||= (collision === '-Y');
     });
 
-    if (playerHealth > 0) {
+    if (playerHealth > 0 && !isStart) {
         // Player +X
         if (!isCollidedRX) {
             if (keysPressed['a']) playerX -= playerSpeed;
@@ -538,6 +616,8 @@ function playerMove() {
         }
     }
 
+    cameraX = Math.max(0, Math.min(cameraX, 1.5 * blockWidth));
+
     ctx.beginPath();
     ctx.strokeStyle = "black";
     ctx.fillStyle = 'white';
@@ -547,7 +627,7 @@ function playerMove() {
     ctx.closePath();
 }
 
-const cameraScale = 1;
+const cameraScale = 1.1;
 let cameraX = blockWidth - (5 * blockWidth * (cameraScale - 1)) / 2;
 let cameraY = blockHeight * 2 - (3 * blockHeight * (cameraScale - 1)) / 2;
 
@@ -555,13 +635,15 @@ function checkGameOver() {
     if (playerHealth <= 0 || systemHealth <= 20) {
         playerHealth = 0;
         result.style.opacity = '1';
-        result.innerText = `GAME OVER\nPlayer Score : ${playerScore}`;
-        clearInterval(playerScoreIncrease);
+        playerScore = Math.floor(playerScore);
+        resultText.innerText = `GAME OVER\nPlayer Score : ${playerScore}`;
+        result.style.pointerEvents = "auto";
         damage.style.opacity = '0';
         isPlay = false;
 
         if (playerScore > highScore) {
             localStorage.setItem('highScore', playerScore);
+            highScore = playerScore;
         }
     }
 }
@@ -572,10 +654,12 @@ function animate() {
     renderedBuildings = [];
     damage.style.opacity = '0';
     drawCity();
+    botMove();
+    drawBots();
     playerMove();
 
     details.innerText = `System Health : ${systemHealth}\nKeys : ${playerKeys}\nShards : ${playerShards}`;
-    player.innerText = `Player Health : ${Math.floor(playerHealth)}\nPlayer Score : ${playerScore}\nHigh Score : ${highScore}`;
+    player.innerText = `Player Health : ${Math.ceil(playerHealth)}\nPlayer Score : ${Math.floor(playerScore)}\nHigh Score : ${highScore}`;
     checkGameOver();
 
     cameraCtx.drawImage(
@@ -590,25 +674,61 @@ requestAnimationFrame(animate);
 
 let decreaseTimer = 1500;
 function decreaseHealth() {
-    systemHealth -= 2;
-    decreaseTimer = Math.max(750, 1500 - timeElapsed);
-
-    if (systemHealth > 0) {
-        setTimeout(decreaseHealth, decreaseTimer);
+    if (systemHealth > 0 && isPlay && !isStart) {
+        systemHealth -= 2;
+        decreaseTimer = Math.max(750, 1500 - timeElapsed);
     }
+    setTimeout(decreaseHealth, decreaseTimer);
 }
 
 setTimeout(decreaseHealth, decreaseTimer);
 
-const playerScoreIncrease = setInterval(() => {
-    playerScore++;
-    timeElapsed += 1;
+setInterval(() => {
+    if (isPlay && !isStart) {
+        playerScore += 0.5;
+        timeElapsed += 1;
+    }
 }, 1000)
+
+let factoryX, factoryY, botGenerate
+setInterval(() => {
+    if (isPlay && !isStart) {
+        for (let col = 0; col < nColumns; col++) {
+            for (let row = 0; row < nRows; row++) {
+                factoryX = globalX + col - 3;
+                factoryY = globalY - row + 3;
+                if (botFactories.has(`${factoryX}, ${factoryY}`)) {
+                    lastBotProduced = botFactories.get(`${factoryX}, ${factoryY}`)
+                    if (lastBotProduced > botGenerateTimer - 1) {
+
+                        botFactories.set(`${factoryX}, ${factoryY}`, 0);
+                        factoryX *= blockWidth;
+                        factoryY *= blockHeight;
+
+                        botGenerate = Math.floor(blockWidth * 4 * Math.random())
+                        if (botGenerate < blockWidth) {
+                            bots.push([factoryX + botGenerate, factoryY, factoryX - blockWidth, factoryY]);
+                        } else if (botGenerate < blockWidth * 2) {
+                            bots.push([factoryX + blockWidth, factoryY - botGenerate + blockHeight, factoryX + blockWidth, factoryY]);
+                        } else if (botGenerate > blockWidth * 3) {
+                            bots.push([factoryX - botGenerate + 4 * blockWidth, factoryY - blockHeight, factoryX, factoryY - blockHeight]);
+                        } else {
+                            bots.push([factoryX, factoryY + botGenerate - 3 * blockHeight, factoryX, factoryY + blockHeight]);
+                        }
+
+                    } else {
+                        botFactories.set(`${factoryX}, ${factoryY}`, lastBotProduced + 1);
+                    }
+                }
+            }
+        }
+    }
+}, 1000);
 
 function Pause() {
     menuScreen.style.opacity = '1';
     menuScreen.style.pointerEvents = 'auto';
-    isPlay = false
+    isPlay = false;
 }
 
 function Resume() {
@@ -618,8 +738,29 @@ function Resume() {
     requestAnimationFrame(animate);
 }
 
+function Restart() {
+    chunksVisited.clear();
+    chunksVisited.add('0, 0');
+
+    global.clear();
+    createBaseChunk();
+
+    playerKeys = 0;
+    playerShards = 0;
+    playerHealth = 50;
+    playerScore = 0;
+    systemHealth = 200;
+
+    playerX = initialPlayerX;
+    playerY = initialPlayerY;
+    globalX = 0;
+    globalY = 0;
+    cameraX = blockWidth - (5 * blockWidth * (cameraScale - 1)) / 2;
+    cameraY = blockHeight * 2 - (3 * blockHeight * (cameraScale - 1)) / 2;
+}
+
 pause.addEventListener("click", () => {
-    Pause()
+    if (!isStart) Pause();
 })
 
 resume.addEventListener("click", () => {
@@ -627,37 +768,56 @@ resume.addEventListener("click", () => {
 })
 
 window.addEventListener("keydown", (event) => {
-    if (event.key === 'Escape' && isPlay) {
+    if (event.key === 'Escape' && isPlay && !isStart) {
         Pause();
-    } else if (event.key === 'Escape') {
+    } else if (event.key === 'Escape' && !isStart) {
         Resume();
+    } else if (event.code === "Space" && isStart) {
+        isStart = false;
+        home.style.opacity = '0';
+        home.style.pointerEvents = 'none';
+        menuScreen.pointerEvents = 'none';
+    } else if (event.code === "Space" && !isPlay) {
+        Restart();
+        result.style.opacity = '0';
+        result.style.pointerEvents = 'none';
+        isPlay = true;
+        requestAnimationFrame(animate);
     }
 })
 
+mainMenu.addEventListener("click", () => {
+    if (!isPlay) {
+        menuScreen.style.opacity = '0';
+        menuScreen.style.pointerEvents = 'none';
+        isStart = true;
+        isPlay = true;
+        home.style.opacity = '1';
+        home.style.pointerEvents = 'auto';
+
+        Restart();
+        requestAnimationFrame(animate);
+    }
+})
+start.addEventListener("click", () => {
+    isStart = false;
+    console.log(isPlay)
+    home.style.opacity = '0';
+    home.style.pointerEvents = 'none';
+})
 restart.addEventListener("click", () => {
     if (confirm("Are you sure you want to restart the game?")) {
-        chunksVisited.clear();
-        chunksVisited.add('0, 0');
-
-        global.clear();
-        createBaseChunk();
-
-        playerKeys = 0;
-        playerShards = 0;
-        playerHealth = 50;
-        playerScore = 0;
-        systemHealth = 200;
-
-        playerX = initialPlayerX;
-        playerY = initialPlayerY;
-        globalX = 0;
-        globalY = 0;
-        cameraX = blockWidth;
-        cameraY = blockHeight * 2;
-
+        Restart();
         menuScreen.style.opacity = '0';
         menuScreen.style.pointerEvents = 'none';
         isPlay = true;
         requestAnimationFrame(animate);
     }
+})
+retry.addEventListener("click", () => {
+    Restart();
+    result.style.opacity = '0';
+    result.style.pointerEvents = 'none';
+    isPlay = true;
+    requestAnimationFrame(animate);
 })

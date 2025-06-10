@@ -10,6 +10,13 @@
 <body>
     <canvas id="world"></canvas>
     <canvas id = "camera"></canvas>
+    <div id = "home" class = "box big">
+        <span id = "title" class = "home">CYBERSCAPE</span>
+        <br>
+        <button id = "start" class = "home">START</button>
+        <br>
+        <span id = "show" class = "home">HIGH SCORE</span>
+    </div>
     <div id = "details" class = "box">
         System Health :
         <br>
@@ -30,9 +37,13 @@
         Player Score :
     </div>
     <div id = "result" class = "box big">
-        GAME OVER
-        <br>
-        Player Score :
+        <span id = "resultText">
+            GAME OVER
+            <br>
+            Player Score :
+            <br>
+        </span>
+        <button id = "retry">PLAY AGAIN</button>
     </div>
     <div id = "damage" class = "box big"></div>
     <div id = "menuScreen" class = "box big">

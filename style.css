@@ -69,6 +69,7 @@ html {
     opacity: 0;
     border: 0;
     pointer-events: none;
+    transition: opacity 0.25s ease-in-out;
 }
 
 button {
@@ -87,6 +88,25 @@ button {
 button:hover {
     background-color: #80FFFF;
     color: rgba(63, 63, 63);
+}
+
+#result {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+    height: 100vh;
+    pointer-events: none;
+}
+
+#resultText {
+    margin-top: -50rem;
+}
+
+#retry {
+    position: relative;
+    width: 20vw;
 }
 
 #menu {
@@ -113,4 +133,36 @@ button:hover {
 #damage {
     transition: opacity 0.1s ease-in-out;
     background-color: rgba(255, 0, 0, 0.2);
+}
+
+#home {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+    opacity: 1;
+}
+
+.home {
+    margin-top: -45vh;
+}
+
+#title {
+    position: absolute;
+    margin-top: -90vh;
+    font-size: 10rem;
+}
+
+#show {
+    position: absolute;
+    width: 25%;
+    font-size: 3rem;
+}
+
+#start {
+    margin-top: -62.5vh ;
+    font-size: 3rem;
+    width: 20vw;
+    height: 10vh;
 }

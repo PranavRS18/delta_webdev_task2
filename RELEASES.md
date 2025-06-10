@@ -28,3 +28,7 @@
 * High Score using Local Storage
 * Building Collisions
 * Pause, Resume and Restart
+
+# v1.1
+* Added Bot System
+* Added Home and Polished on Restarting Games.
