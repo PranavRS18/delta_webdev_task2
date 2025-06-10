@@ -68,7 +68,7 @@ let renderedBuildings = [];
 // Shooter
 let shooterX, shooterY, shooterBuilding, shooterAngle;
 let shooterRadius = buildingWidth / 8;
-const shooterRange = buildingWidth * 1.85;
+const shooterRange = buildingWidth * 2;
 const shooterArc = Math.PI * 7 / 36;
 const shooterSpeed = Math.PI / 350;
 
@@ -103,13 +103,22 @@ const global = new Map();
 let blockData, globalBlockX, globalBlockY, blockX, blockY, isSafe;
 let globalXChange = '0';
 
-const bots = [];
+let bots = [];
 const botFactories = new Map();
-const botGenerateTimer = 8;
+let botGenerateTimer = 8;
 const botRadius = buildingWidth / 8;
 const botRange = buildingWidth * 1.25;
 const botSpeed = 0.075 * remInPx;
-let lastBotProduced, moves, move;
+let lastBotProduced, moves, move, botDistanceFromPlayer;
+
+const healthPackChance = 0.025;
+const healthRadius = 0.5 * remInPx;
+let healthX, healthY, healthPack;
+
+const invisibilityPackChance = 0.05;
+const invisibilityRadius = 0.5 * remInPx;
+let invisibilityX, invisibilityY, invisibilityPack;
+let isInvisible = 0;
 
 const baseChunkBorder = Math.floor(chunkSize / 2);
 function createBaseChunk() {
@@ -121,7 +130,9 @@ function createBaseChunk() {
                 type : 'safe',
                 buildings: [],
                 shooter: [0, 0, 0],
-                keys: []
+                keys: [],
+                health : [],
+                invisibility : []
             });
             continue;
         } else if (shuffledBlockType === 'central') {
@@ -150,7 +161,9 @@ function createBaseChunk() {
             type: shuffledBlockType,
             buildings: [],
             shooter: [0, 0, 0],
-            keys: createKeys()
+            keys: createKeys(),
+            health : (Math.random() < healthPackChance) ? [Math.random() * blockWidth, Math.random() * blockHeight] : [],
+            invisibility : (Math.random() < invisibilityPackChance) ? [Math.random() * blockWidth, Math.random() * blockHeight] : []
         });
     }
 }
@@ -204,7 +217,9 @@ function createChunk(chunkX, chunkY) {
             type : shuffledBlockType,
             buildings: [],
             shooter: [0, 0, 0],
-            keys: createKeys()
+            keys: createKeys(),
+            health : (Math.random() < healthPackChance) ? [Math.random() * blockWidth, Math.random() * blockHeight] : [],
+            invisibility : (Math.random() < invisibilityPackChance) ? [Math.random() * blockWidth, Math.random() * blockHeight] : []
         });
     }
     chunksVisited.add(`${chunkX}, ${chunkY}`)
@@ -219,7 +234,7 @@ function createBlock(globalX, globalY) {
     for (let building = 0; building < nBuildings; building++) {
         buildingX = rectX + Math.random() * (rectWidth - buildingWidth);
         buildingY = rectY + Math.random() * (rectHeight - buildingHeight);
-        buildings.push([buildingX, buildingY, 3]);
+        buildings.push([buildingX, buildingY, 2]);
     }
 
     // Shooter
@@ -235,13 +250,29 @@ function createBlock(globalX, globalY) {
         type : 'regular',
         buildings : buildings,
         shooter: [shooterX, shooterY, shooterAngle],
-        keys : createKeys()
+        keys : createKeys(),
+        health : (Math.random() < healthPackChance) ? [Math.random() * blockWidth, Math.random() * blockHeight] : [],
+        invisibility : (Math.random() < invisibilityPackChance) ? [Math.random() * blockWidth, Math.random() * blockHeight] : []
     });
 
 }
 
 function checkIfKeyCollected(keyX, keyY) {
     if ((keyRadius + playerRadius) ** 2 >= (playerX - keyX) ** 2 + (playerY - keyY) ** 2) {
+        return true;
+    }
+    return false;
+}
+
+function checkIfHealthCollected(healthX, healthY) {
+    if ((healthRadius + playerRadius) ** 2 >= (playerX - healthX) ** 2 + (playerY - healthY) ** 2) {
+        return true;
+    }
+    return false;
+}
+
+function checkIfInvisibilityCollected(invisibilityX, invisibilityY) {
+    if ((invisibilityRadius + playerRadius) ** 2 >= (playerX - invisibilityX) ** 2 + (playerY - invisibilityY) ** 2) {
         return true;
     }
     return false;
@@ -316,7 +347,7 @@ function drawBlock(worldX, worldY) {
         ctx.fillStyle = 'rgb(57, 255, 20)';
     }
     else if (blockData.type === 'central') {
-        createShards(worldX * blockWidth + rectX, worldY * blockHeight + rectY);
+        createShards(worldX * blockWidth + rectX, worldY * blockHeight + rectY)
         ctx.fillStyle = '#FF8C00';
     }
     else if (blockData.type === 'factory') {
@@ -327,12 +358,12 @@ function drawBlock(worldX, worldY) {
         ctx.fillStyle = '#FFFF33';
     }
     else {
-        shardsToHealth(worldX * blockWidth + rectX, worldY * blockHeight + rectY)
+        shardsToHealth(worldX * blockWidth + rectX, worldY * blockHeight + rectY);
         ctx.fillStyle = '#0088FF';
     }
 
-    ctx.strokeStyle = "white"
-    ctx.lineWidth = 0.2 * remInPx;
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 0.3 * remInPx;
     ctx.fillRect(worldX * blockWidth + rectX, worldY * blockHeight + rectY, rectWidth, rectHeight);
     ctx.strokeRect(worldX * blockWidth + rectX, worldY * blockHeight + rectY, rectWidth, rectHeight);
 
@@ -352,17 +383,74 @@ function drawBlock(worldX, worldY) {
 
         if (checkIfKeyCollected(newKeyX, newKeyY)) {
             blockKeys = blockKeys.filter(([x, y]) => !(x === keyX && y === keyY));
-            global.set(`${globalBlockX}, ${globalBlockY}`, {
-                type: blockData.type,
-                buildings: blockBuildings,
-                keys: blockKeys,
-                shooter: blockData.shooter
-            });
             playerKeys++;
             playerScore += 5;
         }
     });
-    ctx.fillStyle = '#FF1493';
+
+    if (blockData.health) {
+        healthPack = blockData.health;
+        healthX = worldX * blockWidth + blockData.health[0];
+        healthY = worldY * blockHeight + blockData.health[1];
+        if (checkIfHealthCollected(healthX, healthY)) {
+            healthPack = [];
+            playerHealth += 10;
+            playerScore += 10;
+        }
+    }
+
+    if (blockData.invisibility) {
+        invisibilityPack = blockData.invisibility;
+        invisibilityX = worldX * blockWidth + blockData.invisibility[0];
+        invisibilityY = worldY * blockHeight + blockData.invisibility[1];
+        if (checkIfInvisibilityCollected(invisibilityX, invisibilityY)) {
+            invisibilityPack = [];
+            isInvisible += 10;
+            playerScore += 10;
+        }
+    }
+
+    global.set(`${globalBlockX}, ${globalBlockY}`, {
+        type: blockData.type,
+        buildings: blockBuildings,
+        keys: blockKeys,
+        shooter: blockData.shooter,
+        health: healthPack,
+        invisibility: invisibilityPack
+    });
+
+    if (blockData.health) {
+        ctx.strokeStyle = '#8B0000';
+        ctx.fillStyle = '#FF10F0';
+        ctx.beginPath();
+        ctx.arc(healthX,
+            healthY,
+            healthRadius,
+            0,
+            Math.PI * 2,
+            false);
+        ctx.stroke();
+        ctx.fill();
+        ctx.closePath();
+    }
+
+    if (blockData.invisibility) {
+        ctx.strokeStyle = '#8B0000';
+        ctx.fillStyle = 'beige';
+        ctx.beginPath();
+        ctx.arc(invisibilityX,
+            invisibilityY,
+            invisibilityRadius,
+            0,
+            Math.PI * 2,
+            false);
+        ctx.stroke();
+        ctx.fill();
+        ctx.closePath();
+    }
+
+    ctx.strokeStyle = '#6B4226';
+    ctx.fillStyle = '#D2691E';
     for (let key = 0; key < blockKeys.length; key++) {
         keyX = worldX * blockWidth + blockKeys[key][0];
         keyY = worldY * blockHeight + blockKeys[key][1];
@@ -374,6 +462,7 @@ function drawBlock(worldX, worldY) {
             0,
             Math.PI * 2,
             false);
+        ctx.stroke();
         ctx.fill();
         ctx.closePath();
     }
@@ -417,7 +506,7 @@ function drawShooter(worldX, worldY) {
     blockData.shooter[2] += shooterSpeed;
 
     if ((playerX - shooterX) ** 2 + (playerY - shooterY) ** 2 <= (playerRadius + shooterRange) ** 2 && blockData.type === 'regular'
-    && playerHealth > 0) {
+    && playerHealth > 0 && !isInvisible) {
         playerAngle = Math.atan2(playerY - shooterY, playerX - shooterX);
         shooterAngle = shooterAngle % (Math.PI * 2);
         shooterAngle = (shooterAngle > Math.PI) ? shooterAngle - 2 * Math.PI : shooterAngle;
@@ -541,8 +630,15 @@ function drawBots() {
         ctx.stroke();
         ctx.fill();
 
-        if ((botRange + playerRadius) ** 2 > (bot[0] + (3 - globalX) * blockWidth - playerX) ** 2 + ((3 + globalY) * blockHeight - bot[1] - playerY) ** 2 && !isSafe) {
-            playerHealth -= playerHealthDecrease;
+        botDistanceFromPlayer = (bot[0] + (3 - globalX) * blockWidth - playerX) ** 2 + ((3 + globalY) * blockHeight - bot[1] - playerY) ** 2;
+
+        // Remove if Bot Not in 15 Blocks Radius
+        if (botDistanceFromPlayer > (15 * blockWidth) ** 2) {
+            bots = bots.filter(([botX, botY]) => !(botX === bot[0] && botY === bot[1]));
+        }
+
+        if ((botRange + playerRadius) ** 2 > botDistanceFromPlayer && !isSafe && !isInvisible) {
+            playerHealth -= playerHealthDecrease * 2;
             damage.style.opacity = '1';
         }
 
@@ -619,8 +715,13 @@ function playerMove() {
     cameraX = Math.max(0, Math.min(cameraX, 1.5 * blockWidth));
 
     ctx.beginPath();
-    ctx.strokeStyle = "black";
-    ctx.fillStyle = 'white';
+    if (!isInvisible) {
+        ctx.strokeStyle = "black";
+        ctx.fillStyle = 'white';
+    } else {
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.5)"
+        ctx.fillStyle = "rgba(255, 255, 255, 0.5)"
+    }
     ctx.arc(playerX, playerY, playerRadius, 0, Math.PI * 2, false);
     ctx.stroke();
     ctx.fill();
@@ -671,7 +772,6 @@ function animate() {
     if (isPlay) requestAnimationFrame(animate);
 }
 requestAnimationFrame(animate);
-
 let decreaseTimer = 1500;
 function decreaseHealth() {
     if (systemHealth > 0 && isPlay && !isStart) {
@@ -688,6 +788,12 @@ setInterval(() => {
         playerScore += 0.5;
         timeElapsed += 1;
     }
+    botGenerateTimer = Math.max(3, 8 - Math.floor(timeElapsed / 120));
+
+    if (isInvisible) {
+        isInvisible--;
+    }
+
 }, 1000)
 
 let factoryX, factoryY, botGenerate
@@ -707,13 +813,13 @@ setInterval(() => {
 
                         botGenerate = Math.floor(blockWidth * 4 * Math.random())
                         if (botGenerate < blockWidth) {
-                            bots.push([factoryX + botGenerate, factoryY, factoryX - blockWidth, factoryY]);
+                            bots.push([factoryX + botGenerate, factoryY, factoryX + blockWidth, factoryY]);
                         } else if (botGenerate < blockWidth * 2) {
-                            bots.push([factoryX + blockWidth, factoryY - botGenerate + blockHeight, factoryX + blockWidth, factoryY]);
+                            bots.push([factoryX + blockWidth, factoryY - botGenerate + blockHeight, factoryX + blockWidth, factoryY - blockHeight]);
                         } else if (botGenerate > blockWidth * 3) {
                             bots.push([factoryX - botGenerate + 4 * blockWidth, factoryY - blockHeight, factoryX, factoryY - blockHeight]);
                         } else {
-                            bots.push([factoryX, factoryY + botGenerate - 3 * blockHeight, factoryX, factoryY + blockHeight]);
+                            bots.push([factoryX, factoryY + botGenerate - 3 * blockHeight, factoryX, factoryY]);
                         }
 
                     } else {
@@ -740,6 +846,7 @@ function Resume() {
 
 function Restart() {
     chunksVisited.clear();
+    botFactories.clear();
     chunksVisited.add('0, 0');
 
     global.clear();
@@ -757,6 +864,7 @@ function Restart() {
     globalY = 0;
     cameraX = blockWidth - (5 * blockWidth * (cameraScale - 1)) / 2;
     cameraY = blockHeight * 2 - (3 * blockHeight * (cameraScale - 1)) / 2;
+    bots = [];
 }
 
 pause.addEventListener("click", () => {
@@ -801,7 +909,6 @@ mainMenu.addEventListener("click", () => {
 })
 start.addEventListener("click", () => {
     isStart = false;
-    console.log(isPlay)
     home.style.opacity = '0';
     home.style.pointerEvents = 'none';
 })

@@ -32,3 +32,7 @@
 # v1.1
 * Added Bot System
 * Added Home and Polished on Restarting Games.
+
+# v1.2
+* Added Bot Despawning
+* Added Health and Invisibility Packs
