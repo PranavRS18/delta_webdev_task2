@@ -39,8 +39,13 @@
 
 # Pre v2.0
 * Added MarketPlace with Key Magnet, Large Health Pack and EMP Blast.
-* Added TRacking System BackEnd.
+* Added Tracking System BackEnd.
 * Rest of the Items won't work.
 * Added Shooter Look Angle
 * Added Instructions
 * Added Restart and Main Menu Confirmation
+
+# Pre Beta v2.0
+* Added Smoother Look Angle
+* Added Ultimate Tracker
+* Fixed Instructions Bug

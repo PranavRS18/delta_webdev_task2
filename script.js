@@ -32,7 +32,7 @@ const marketPlace = document.querySelector("#marketPlace");
 const message = document.querySelector("#message");
 const items = document.querySelectorAll(".items");
 let itemButton, itemButtonText;
-const itemPrices = [0, 5, 7, 10, 0, 0, 0, 0];
+const itemPrices = [3, 5, 7, 10, 0, 0, 0, 0];
 const instructions = document.querySelector("#instructions");
 const howToPlay = document.querySelector("#howToPlay");
 const confirmation = document.querySelector("#confirmation");
@@ -534,7 +534,7 @@ function drawShooter(worldX, worldY) {
     blockData.shooter[2] += shooterSpeed;
 
     if ((playerX - shooterX) ** 2 + (playerY - shooterY) ** 2 <= (playerRadius + shooterRange) ** 2 && blockData.type === 'regular'
-        && playerHealth > 0 && !isInvisible) {
+        && playerHealth > 0 && !isInvisible && !isEMPBlast) {
         playerAngle = Math.atan2(playerY - shooterY, playerX - shooterX);
         shooterAngle = shooterAngle % (Math.PI * 2);
         shooterAngle = (shooterAngle > Math.PI) ? shooterAngle - 2 * Math.PI : shooterAngle;
@@ -663,7 +663,7 @@ function drawBots() {
             bots = bots.filter(([botX, botY]) => !(botX === bot[0] && botY === bot[1]));
         }
 
-        if ((botRange + playerRadius) ** 2 > botDistanceFromPlayer && !isSafe && !isInvisible) {
+        if ((botRange + playerRadius) ** 2 > botDistanceFromPlayer && !isSafe && !isInvisible && !isEMPBlast) {
             playerHealth -= playerHealthDecrease * 2;
             damage.style.opacity = '1';
         }
@@ -680,8 +680,8 @@ const initialPlayerY = world.height / 2;
 let playerX = initialPlayerX;
 let playerY = initialPlayerY;
 let playerLookAngle = 3 * Math.PI / 2;
-const playerLookArc = Math.PI * 3 / 16
-const playerLookAngleSpeed = Math.PI / 50;
+const playerLookArc = Math.PI / 8;
+const playerLookAngleSpeed = Math.PI / 15;
 const epsilon = 0.05;
 let globalX = 0;
 let globalY = 0;
@@ -713,18 +713,16 @@ function playerMove() {
     if (playerHealth > 0 && !isStart) {
 
         if (keysPressed['q']) {
-            playerLookAngle -= playerLookAngleSpeed;
+            playerLookAngle -= playerLookAngleSpeed / 2;
         } else if (keysPressed['e']) {
-            playerLookAngle += playerLookAngleSpeed;
+            playerLookAngle += playerLookAngleSpeed / 2;
         }
 
         // Player +X
         if (!isCollidedRX) {
             if (keysPressed['a']) {
                 playerX -= playerSpeed;
-                if (Math.abs(playerLookAngle - Math.PI) < epsilon) playerLookAngle = Math.PI;
-                else if (playerLookAngle < Math.PI) playerLookAngle += playerLookAngleSpeed;
-                else if (playerLookAngle > Math.PI) playerLookAngle -= playerLookAngleSpeed;
+                playerLookAngle -= Math.sin((playerLookAngle - Math.PI) / 2) * playerLookAngleSpeed;
                 if (playerX > initialPlayerX + blockWidth * 3 / 4 || playerX < initialPlayerX - blockWidth * 3 / 4) {
                     cameraX -= playerSpeed;
                 }
@@ -734,9 +732,7 @@ function playerMove() {
         if (!isCollidedLX) {
             if (keysPressed['d']) {
                 playerX += playerSpeed;
-                if (playerLookAngle < epsilon) playerLookAngle = 0;
-                else if (playerLookAngle >= Math.PI) playerLookAngle += playerLookAngleSpeed;
-                else if (playerLookAngle < Math.PI) playerLookAngle -= playerLookAngleSpeed;
+                playerLookAngle -= Math.sin(playerLookAngle / 2 - Math.PI) * playerLookAngleSpeed;
                 if (playerX > initialPlayerX + blockWidth * 3 / 4 || playerX < initialPlayerX - blockWidth * 3 / 4) {
                     if (keysPressed['d']) cameraX += playerSpeed;
                 }
@@ -747,9 +743,7 @@ function playerMove() {
         if (!isCollidedUY) {
             if (keysPressed['w']) {
                 playerY -= playerSpeed;
-                if (Math.abs(playerLookAngle - 3 * Math.PI / 2) < epsilon) playerLookAngle = 3 * Math.PI / 2;
-                else if (playerLookAngle < 3 * Math.PI / 2 && playerLookAngle > Math.PI / 2) playerLookAngle += playerLookAngleSpeed;
-                else if (playerLookAngle > 3 * Math.PI / 2 || playerLookAngle > 0) playerLookAngle -= playerLookAngleSpeed;
+                playerLookAngle -= Math.sin((playerLookAngle - 3 * Math.PI / 2) / 2) * playerLookAngleSpeed;
                 if (playerY > initialPlayerY + blockHeight * 3 / 4 || playerY < initialPlayerY - blockHeight * 3 / 4) {
                     if (keysPressed['w']) cameraY -= playerSpeed;
                 }
@@ -761,9 +755,7 @@ function playerMove() {
         if (!isCollidedDY) {
             if (keysPressed['s']) {
                 playerY += playerSpeed;
-                if (Math.abs(playerLookAngle - Math.PI / 2) < epsilon) playerLookAngle = Math.PI / 2;
-                else if (playerLookAngle <= 3 * Math.PI / 2 && playerLookAngle > Math.PI / 2) playerLookAngle -= playerLookAngleSpeed;
-                else if (playerLookAngle > 3 * Math.PI / 2 || playerLookAngle > 0) playerLookAngle += playerLookAngleSpeed;
+                playerLookAngle -= Math.sin((playerLookAngle - Math.PI / 2) / 2) * playerLookAngleSpeed;
                 if (playerY > initialPlayerY + blockHeight * 3 / 4 || playerY < initialPlayerY - blockHeight * 3 / 4) {
                     if (keysPressed['s']) cameraY += playerSpeed;
                 }
@@ -788,11 +780,11 @@ function playerMove() {
 
     ctx.beginPath();
     if (!isInvisible) {
-        ctx.strokeStyle = "black";
-        ctx.fillStyle = 'white';
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.4)";
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
     } else {
-        ctx.strokeStyle = "rgba(0, 0, 0, 0.5)";
-        ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
+        ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
     }
     ctx.moveTo(playerX + (playerRadius * Math.cos(playerLookAngle - playerLookArc) * 1.4), playerY + (playerRadius * Math.sin(playerLookAngle - playerLookArc) * 1.4));
     ctx.arc(playerX, playerY, playerRadius * 1.75, playerLookAngle - playerLookArc, playerLookAngle + playerLookArc, false);
@@ -835,6 +827,32 @@ function animate() {
     botMove();
     drawBots();
     playerMove();
+
+    if (isTracking) {
+        requestAnimationFrame(tracker);
+        trackAngleCentral = Math.atan2(((3 + globalY - nearestCentral[2] + 0.5) * blockHeight) - playerY, ((nearestCentral[1] - globalX + 3 + 0.5) * blockWidth) - playerX)
+        trackAngleBase = Math.atan2(((3 + globalY - nearestBase[2] + 0.5) * blockHeight) - playerY, ((nearestBase[1] - globalX + 3 + 0.5) * blockWidth) - playerX)
+
+        ctx.beginPath();
+        ctx.fillStyle = "orange";
+        ctx.moveTo(playerX + Math.cos(trackAngleCentral) * trackArrowDistance, playerY + Math.sin(trackAngleCentral) * trackArrowDistance);
+        ctx.lineTo(playerX + Math.cos(trackAngleCentral - Math.PI / 12) * trackArrowDistance * 3 / 5, playerY + Math.sin(trackAngleCentral - Math.PI / 12) * trackArrowDistance * 3 / 5);
+        ctx.lineTo(playerX + Math.cos(trackAngleCentral) * trackArrowDistance * 3 / 4, playerY + Math.sin(trackAngleCentral) * trackArrowDistance * 3 / 4);
+        ctx.lineTo(playerX + Math.cos(trackAngleCentral + Math.PI / 12) * trackArrowDistance * 3 / 5, playerY + Math.sin(trackAngleCentral + Math.PI / 12) * trackArrowDistance * 3 / 5);
+        ctx.lineTo(playerX + Math.cos(trackAngleCentral) * trackArrowDistance, playerY + Math.sin(trackAngleCentral) * trackArrowDistance);
+        ctx.fill();
+        ctx.closePath();
+
+        ctx.beginPath();
+        ctx.fillStyle = "rgba(0, 0, 255, 0.8)";
+        ctx.moveTo(playerX + Math.cos(trackAngleBase) * trackArrowDistance, playerY + Math.sin(trackAngleBase) * trackArrowDistance);
+        ctx.lineTo(playerX + Math.cos(trackAngleBase - Math.PI / 12) * trackArrowDistance * 3 / 5, playerY + Math.sin(trackAngleBase - Math.PI / 12) * trackArrowDistance * 3 / 5);
+        ctx.lineTo(playerX + Math.cos(trackAngleBase) * trackArrowDistance * 3 / 4, playerY + Math.sin(trackAngleBase) * trackArrowDistance * 3 / 4);
+        ctx.lineTo(playerX + Math.cos(trackAngleBase + Math.PI / 12) * trackArrowDistance * 3 / 5, playerY + Math.sin(trackAngleBase + Math.PI / 12) * trackArrowDistance * 3 / 5);
+        ctx.lineTo(playerX + Math.cos(trackAngleBase) * trackArrowDistance, playerY + Math.sin(trackAngleBase) * trackArrowDistance);
+        ctx.fill();
+        ctx.closePath();
+    }
 
     details.innerText = `System Health : ${systemHealth}\nKeys : ${playerKeys}\nShards : ${playerShards}`;
     player.innerText = `Player Health : ${Math.ceil(playerHealth)}\nPlayer Score : ${Math.floor(playerScore)}\nHigh Score : ${highScore}`;
@@ -937,11 +955,13 @@ let isEMPBlast = 0;
 let isMagnet = 0;
 let isTracking = 0;
 
-let nearestCentral = [16 * blockWidth, 0, 0];
-let nearestBase = [16 * blockHeight, 0, 0];
-let distance, worldData, trackAngleCentral, trackAngleBase, trackArrowDistance;
+
+let distance, worldData, trackAngleCentral, trackAngleBase, nearestCentral, nearestBase;
+const trackArrowDistance = 4.5 * remInPx;
 function tracker() {
     if (isTracking) {
+        nearestCentral = [16 * blockWidth, 0, 0];
+        nearestBase = [16 * blockWidth, 0, 0];
         for (let column = 0; column < nColumns; column++) {
             for (let row = 0; row < nRows; row++) {
                 worldData = global.get(`${globalX + column - 3}, ${globalY - row + 3}`)
@@ -957,7 +977,8 @@ function tracker() {
                 }
             }
         }
-        setTimeout(tracker, 50);
+        console.log(nearestBase);
+        requestAnimationFrame(tracker)
     }
 }
 
@@ -965,9 +986,8 @@ function getItems(idx) {
     if (isPlay && !isStart) {
         if (idx === 0) {
             nearestCentral = [16 * blockWidth, 0, 0];
-            nearestBase = [16 * blockHeight, 0, 0];
+            nearestBase = [16 * blockWidth, 0, 0];
             isTracking = 60;
-            tracker();
         }
         else if (idx === 1) {
             playerHealth += 20;
@@ -1059,6 +1079,7 @@ function Restart() {
     decreaseTimer = 1500;
     timeElapsed = 0;
     botGenerateTimer = 8;
+    playerLookAngle = 3 * Math.PI / 2
 
     playerX = initialPlayerX;
     playerY = initialPlayerY;
@@ -1085,6 +1106,7 @@ window.addEventListener("keydown", (event) => {
         }
     } else if (event.key === 'Escape' && !isStart && (parseInt(howToPlay.style.opacity))) {
         howToPlay.style.opacity = '0';
+        howToPlay.style.pointerEvents = 'none';
         menuScreen.style.opacity = '1';
         menuScreen.style.pointerEvents = 'auto';
     }
@@ -1118,6 +1140,12 @@ window.addEventListener("keydown", (event) => {
     }
 })
 
+window.addEventListener("keydown", (event) => {
+    if (event.code === "Space" && isPlay && !isStart) {
+
+    }
+})
+
 mainMenu.addEventListener("click", () => {
     if (!isPlay) {
         sure.innerText = "Are you sure you want to quit?"
@@ -1132,6 +1160,7 @@ mainMenu.addEventListener("click", () => {
 
 instructions.addEventListener("click", () => {
     howToPlay.style.opacity = '1';
+    howToPlay.style.pointerEvents = 'auto';
     menuScreen.style.opacity = '0';
     menuScreen.style.pointerEvents = 'none';
 })
