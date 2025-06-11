@@ -28,6 +28,21 @@ const restart = document.querySelector("#restart");
 const damage = document.querySelector("#damage");
 const retry = document.querySelector("#retry");
 const mainMenu = document.querySelector("#mainMenu");
+const marketPlace = document.querySelector("#marketPlace");
+const message = document.querySelector("#message");
+const items = document.querySelectorAll(".items");
+let itemButton, itemButtonText;
+const itemPrices = [0, 5, 7, 10, 0, 0, 0, 0];
+const instructions = document.querySelector("#instructions");
+const howToPlay = document.querySelector("#howToPlay");
+const confirmation = document.querySelector("#confirmation");
+const sure = document.querySelector("#sure");
+const yes = document.querySelector("#yes");
+const no = document.querySelector("#no");
+
+// Variables
+let isMarket = false;
+let isRestart = null;
 
 // World Variables
 let isStart = true;
@@ -71,6 +86,7 @@ let shooterRadius = buildingWidth / 8;
 const shooterRange = buildingWidth * 2;
 const shooterArc = Math.PI * 7 / 36;
 const shooterSpeed = Math.PI / 350;
+let damageOpacity = 0.4;
 
 // Key
 const keysToShards = 4;
@@ -79,6 +95,7 @@ let keyRadius = buildingWidth / 12;
 let keys = [];
 let blockKeys = [];
 let systemHealth = 200;
+const magnetSpeed = 0.3 * remInPx;
 
 function createKeys() {
     // Keys
@@ -111,11 +128,11 @@ const botRange = buildingWidth * 1.25;
 const botSpeed = 0.075 * remInPx;
 let lastBotProduced, moves, move, botDistanceFromPlayer;
 
-const healthPackChance = 0.025;
+const healthPackChance = 0.015;
 const healthRadius = 0.5 * remInPx;
 let healthX, healthY, healthPack;
 
-const invisibilityPackChance = 0.05;
+const invisibilityPackChance = 0.03;
 const invisibilityRadius = 0.5 * remInPx;
 let invisibilityX, invisibilityY, invisibilityPack;
 let isInvisible = 0;
@@ -378,8 +395,20 @@ function drawBlock(worldX, worldY) {
 
     blockKeys = blockData.keys;
     blockKeys.forEach(([keyX, keyY]) => {
+
         newKeyX = worldX * blockWidth + keyX;
         newKeyY = worldY * blockHeight + keyY;
+
+        if (isMagnet) {
+            if ((playerX - newKeyX) ** 2 + (playerY - newKeyY) ** 2 < (0.5 * blockWidth) ** 2) {
+                blockKeys = blockKeys.filter(([x, y]) => !(x === keyX && y === keyY));
+                newKeyX += Math.cos(Math.atan2(playerY - newKeyY, playerX - newKeyX)) * magnetSpeed;
+                newKeyY += Math.sin(Math.atan2(playerY - newKeyY, playerX - newKeyX)) * magnetSpeed;
+                keyX = newKeyX - worldX * blockWidth;
+                keyY = newKeyY - worldY * blockHeight
+                blockKeys.push([keyX, keyY]);
+            }
+        }
 
         if (checkIfKeyCollected(newKeyX, newKeyY)) {
             blockKeys = blockKeys.filter(([x, y]) => !(x === keyX && y === keyY));
@@ -469,7 +498,6 @@ function drawBlock(worldX, worldY) {
 }
 
 function drawShooter(worldX, worldY) {
-
     globalBlockX = globalX + worldX - 3;
     globalBlockY = globalY - worldY + 3;
     blockData = global.get(`${globalBlockX}, ${globalBlockY}`);
@@ -490,8 +518,8 @@ function drawShooter(worldX, worldY) {
 
 
     ctx.beginPath();
-    ctx.strokeStyle = "rgb(255, 36, 36)";
-    ctx.fillStyle = 'rgba(255, 36, 36, 0.4)';
+    ctx.strokeStyle = `rgba(255, 36, 36, ${damageOpacity * 0.7 / 0.4})`;
+    ctx.fillStyle = `rgba(255, 36, 36, ${damageOpacity})`;
     ctx.moveTo(shooterX, shooterY);
     ctx.arc(shooterX,
         shooterY,
@@ -506,18 +534,16 @@ function drawShooter(worldX, worldY) {
     blockData.shooter[2] += shooterSpeed;
 
     if ((playerX - shooterX) ** 2 + (playerY - shooterY) ** 2 <= (playerRadius + shooterRange) ** 2 && blockData.type === 'regular'
-    && playerHealth > 0 && !isInvisible) {
+        && playerHealth > 0 && !isInvisible) {
         playerAngle = Math.atan2(playerY - shooterY, playerX - shooterX);
         shooterAngle = shooterAngle % (Math.PI * 2);
         shooterAngle = (shooterAngle > Math.PI) ? shooterAngle - 2 * Math.PI : shooterAngle;
         playerAngle = (playerAngle > Math.PI) ? playerAngle - 2 * Math.PI : playerAngle;
         if (playerAngle > shooterAngle - shooterArc &&
-        playerAngle < shooterAngle + shooterArc && !isSafe) {
+            playerAngle < shooterAngle + shooterArc && !isSafe) {
             playerHealth -= playerHealthDecrease;
             damage.style.opacity = '1';
-        } else {
         }
-    } else {
     }
 }
 
@@ -624,8 +650,8 @@ function drawBots() {
         ctx.fill();
 
         ctx.beginPath();
-        ctx.strokeStyle = 'gray';
-        ctx.fillStyle = 'rgba(63, 63, 63, 0.4)';
+        ctx.strokeStyle = `rgba(63, 63, 63, ${damageOpacity * 0.7 / 0.4})`;
+        ctx.fillStyle = `rgba(63, 63, 63, ${damageOpacity})`;
         ctx.arc(bot[0] + (3 - globalX) * blockWidth, (3 + globalY) * blockHeight - bot[1], botRange, 0, 2 * Math.PI, false);
         ctx.stroke();
         ctx.fill();
@@ -647,12 +673,16 @@ function drawBots() {
 
 // Player
 const playerRadius = 0.8 * remInPx;
-const playerSpeed = 0.15 * remInPx;
+const playerSpeed = 0.25 * remInPx;
 const keysPressed = [];
 const initialPlayerX = world.width / 2;
 const initialPlayerY = world.height / 2;
 let playerX = initialPlayerX;
 let playerY = initialPlayerY;
+let playerLookAngle = 3 * Math.PI / 2;
+const playerLookArc = Math.PI * 3 / 16
+const playerLookAngleSpeed = Math.PI / 50;
+const epsilon = 0.05;
 let globalX = 0;
 let globalY = 0;
 
@@ -678,36 +708,65 @@ function playerMove() {
        isCollidedDY ||= (collision === '-Y');
     });
 
+    playerLookAngle = (playerLookAngle % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI)
+
     if (playerHealth > 0 && !isStart) {
+
+        if (keysPressed['q']) {
+            playerLookAngle -= playerLookAngleSpeed;
+        } else if (keysPressed['e']) {
+            playerLookAngle += playerLookAngleSpeed;
+        }
+
         // Player +X
         if (!isCollidedRX) {
-            if (keysPressed['a']) playerX -= playerSpeed;
-            if (playerX > initialPlayerX + blockWidth * 3 / 4 || playerX < initialPlayerX - blockWidth * 3 / 4) {
-                if (keysPressed['a']) cameraX -= playerSpeed;
+            if (keysPressed['a']) {
+                playerX -= playerSpeed;
+                if (Math.abs(playerLookAngle - Math.PI) < epsilon) playerLookAngle = Math.PI;
+                else if (playerLookAngle < Math.PI) playerLookAngle += playerLookAngleSpeed;
+                else if (playerLookAngle > Math.PI) playerLookAngle -= playerLookAngleSpeed;
+                if (playerX > initialPlayerX + blockWidth * 3 / 4 || playerX < initialPlayerX - blockWidth * 3 / 4) {
+                    cameraX -= playerSpeed;
+                }
             }
         }
         // Player -X
         if (!isCollidedLX) {
-            if (keysPressed['d']) playerX += playerSpeed;
-            if (playerX > initialPlayerX + blockWidth * 3 / 4 || playerX < initialPlayerX - blockWidth * 3 / 4) {
-                if (keysPressed['d']) cameraX += playerSpeed;
+            if (keysPressed['d']) {
+                playerX += playerSpeed;
+                if (playerLookAngle < epsilon) playerLookAngle = 0;
+                else if (playerLookAngle >= Math.PI) playerLookAngle += playerLookAngleSpeed;
+                else if (playerLookAngle < Math.PI) playerLookAngle -= playerLookAngleSpeed;
+                if (playerX > initialPlayerX + blockWidth * 3 / 4 || playerX < initialPlayerX - blockWidth * 3 / 4) {
+                    if (keysPressed['d']) cameraX += playerSpeed;
+                }
             }
         }
 
         // Player +Y
         if (!isCollidedUY) {
-            if (keysPressed['w']) playerY -= playerSpeed;
-            if (playerY > initialPlayerY + blockHeight * 3 / 4 || playerY < initialPlayerY - blockHeight * 3 / 4) {
-                if (keysPressed['w']) cameraY -= playerSpeed;
+            if (keysPressed['w']) {
+                playerY -= playerSpeed;
+                if (Math.abs(playerLookAngle - 3 * Math.PI / 2) < epsilon) playerLookAngle = 3 * Math.PI / 2;
+                else if (playerLookAngle < 3 * Math.PI / 2 && playerLookAngle > Math.PI / 2) playerLookAngle += playerLookAngleSpeed;
+                else if (playerLookAngle > 3 * Math.PI / 2 || playerLookAngle > 0) playerLookAngle -= playerLookAngleSpeed;
+                if (playerY > initialPlayerY + blockHeight * 3 / 4 || playerY < initialPlayerY - blockHeight * 3 / 4) {
+                    if (keysPressed['w']) cameraY -= playerSpeed;
+                }
             }
         }
 
 
         // Camera
         if (!isCollidedDY) {
-            if (keysPressed['s']) playerY += playerSpeed;
-            if (playerY > initialPlayerY + blockHeight * 3 / 4 || playerY < initialPlayerY - blockHeight * 3 / 4) {
-                if (keysPressed['s']) cameraY += playerSpeed;
+            if (keysPressed['s']) {
+                playerY += playerSpeed;
+                if (Math.abs(playerLookAngle - Math.PI / 2) < epsilon) playerLookAngle = Math.PI / 2;
+                else if (playerLookAngle <= 3 * Math.PI / 2 && playerLookAngle > Math.PI / 2) playerLookAngle -= playerLookAngleSpeed;
+                else if (playerLookAngle > 3 * Math.PI / 2 || playerLookAngle > 0) playerLookAngle += playerLookAngleSpeed;
+                if (playerY > initialPlayerY + blockHeight * 3 / 4 || playerY < initialPlayerY - blockHeight * 3 / 4) {
+                    if (keysPressed['s']) cameraY += playerSpeed;
+                }
             }
         }
     }
@@ -719,10 +778,26 @@ function playerMove() {
         ctx.strokeStyle = "black";
         ctx.fillStyle = 'white';
     } else {
-        ctx.strokeStyle = "rgba(0, 0, 0, 0.5)"
-        ctx.fillStyle = "rgba(255, 255, 255, 0.5)"
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.5)";
+        ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
     }
     ctx.arc(playerX, playerY, playerRadius, 0, Math.PI * 2, false);
+    ctx.stroke();
+    ctx.fill();
+    ctx.closePath();
+
+    ctx.beginPath();
+    if (!isInvisible) {
+        ctx.strokeStyle = "black";
+        ctx.fillStyle = 'white';
+    } else {
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.5)";
+        ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+    }
+    ctx.moveTo(playerX + (playerRadius * Math.cos(playerLookAngle - playerLookArc) * 1.4), playerY + (playerRadius * Math.sin(playerLookAngle - playerLookArc) * 1.4));
+    ctx.arc(playerX, playerY, playerRadius * 1.75, playerLookAngle - playerLookArc, playerLookAngle + playerLookArc, false);
+    ctx.lineTo(playerX + (playerRadius * Math.cos(playerLookAngle + playerLookArc) * 1.4), playerY + (playerRadius * Math.sin(playerLookAngle + playerLookArc)) * 1.4);
+    ctx.arc(playerX, playerY, playerRadius * 1.5, playerLookAngle + playerLookArc, playerLookAngle - playerLookArc, true);
     ctx.stroke();
     ctx.fill();
     ctx.closePath();
@@ -734,7 +809,7 @@ let cameraY = blockHeight * 2 - (3 * blockHeight * (cameraScale - 1)) / 2;
 
 function checkGameOver() {
     if (playerHealth <= 0 || systemHealth <= 20) {
-        playerHealth = 0;
+        closeMarket();
         result.style.opacity = '1';
         playerScore = Math.floor(playerScore);
         resultText.innerText = `GAME OVER\nPlayer Score : ${playerScore}`;
@@ -746,7 +821,9 @@ function checkGameOver() {
             localStorage.setItem('highScore', playerScore);
             highScore = playerScore;
         }
+        return true;
     }
+    return false;
 }
 
 function animate() {
@@ -771,6 +848,23 @@ function animate() {
         window.innerWidth, window.innerHeight);
     if (isPlay) requestAnimationFrame(animate);
 }
+
+function closeMarket() {
+
+    items.forEach((item) => {
+        item.style.transform = "scale(0)"
+    })
+
+    marketPlace.style.opacity = '0';
+    marketPlace.style.width = '0';
+    marketPlace.style.height = '0';
+    marketPlace.style.top = "50vh";
+    marketPlace.style.left = "50vw";
+    marketPlace.style.pointerEvents = "none";
+
+    isMarket = false
+}
+
 requestAnimationFrame(animate);
 let decreaseTimer = 1500;
 function decreaseHealth() {
@@ -792,6 +886,14 @@ setInterval(() => {
 
     if (isInvisible) {
         isInvisible--;
+    }
+
+    if (isMagnet) {
+        isMagnet--;
+    }
+
+    if (isTracking) {
+        isTracking--;
     }
 
 }, 1000)
@@ -831,6 +933,99 @@ setInterval(() => {
     }
 }, 1000);
 
+let isEMPBlast = 0;
+let isMagnet = 0;
+let isTracking = 0;
+
+let nearestCentral = [16 * blockWidth, 0, 0];
+let nearestBase = [16 * blockHeight, 0, 0];
+let distance, worldData, trackAngleCentral, trackAngleBase, trackArrowDistance;
+function tracker() {
+    if (isTracking) {
+        for (let column = 0; column < nColumns; column++) {
+            for (let row = 0; row < nRows; row++) {
+                worldData = global.get(`${globalX + column - 3}, ${globalY - row + 3}`)
+                distance = Math.sqrt((column * blockWidth - playerX) ** 2 + (row * blockHeight - playerY) ** 2)
+                if (worldData.type === 'central' && distance < nearestCentral[0]) {
+                    nearestCentral[0] = distance;
+                    nearestCentral[1] = globalX + column - 3;
+                    nearestCentral[2] = globalY - row + 3;
+                } else if (worldData.type === 'base' && distance < nearestBase[0]) {
+                    nearestBase[0] = distance;
+                    nearestBase[1] = globalX + column - 3;
+                    nearestBase[2] = globalY - row + 3;
+                }
+            }
+        }
+        setTimeout(tracker, 50);
+    }
+}
+
+function getItems(idx) {
+    if (isPlay && !isStart) {
+        if (idx === 0) {
+            nearestCentral = [16 * blockWidth, 0, 0];
+            nearestBase = [16 * blockHeight, 0, 0];
+            isTracking = 60;
+            tracker();
+        }
+        else if (idx === 1) {
+            playerHealth += 20;
+        } else if (idx === 2) {
+            isMagnet = 15;
+        }
+        else if (idx === 3) {
+           isEMPBlast = 25;
+           bots = [];
+        }
+    }
+}
+
+setInterval(() => {
+    items.forEach((item, idx, items) => {
+        itemButton = Array.from(item.children).reverse()[0];
+        if (itemButton.matches(":hover")) {
+            itemButtonText = `BUY FOR ${itemPrices[idx]} SHARDS`;
+        } else {
+            itemButtonText = `COSTS ${itemPrices[idx]} SHARDS`;
+        }
+        itemButton.innerText = itemButtonText;
+    });
+
+    if (isSafe) {
+        message.style.opacity = '1';
+    } else {
+        if (isMarket) {
+            closeMarket();
+        }
+        message.style.opacity = '0';
+    }
+
+    if (isEMPBlast > 0) {
+        isEMPBlast -= 0.02;
+    }
+
+    if (isEMPBlast < 3) {
+        damageOpacity = Math.acos(Math.cos(6 * isEMPBlast - Math.PI)) * 0.4 / Math.PI;
+    }
+    else if(isEMPBlast > 22) {
+        damageOpacity = Math.acos(Math.cos(6 * isEMPBlast)) * 0.4 / Math.PI;
+    }
+    else {
+        damageOpacity = 0
+    }
+},20)
+
+items.forEach((item, idx) => {
+    itemButton = Array.from(item.children).reverse()[0];
+    itemButton.addEventListener('click', () => {
+        if (playerShards >= itemPrices[idx]) {
+            playerShards -= itemPrices[idx];
+            getItems(idx);
+        }
+    })
+})
+
 function Pause() {
     menuScreen.style.opacity = '1';
     menuScreen.style.pointerEvents = 'auto';
@@ -857,6 +1052,13 @@ function Restart() {
     playerHealth = 50;
     playerScore = 0;
     systemHealth = 200;
+    isEMPBlast = 0;
+    isInvisible = 0;
+    isMagnet = 0;
+    isTracking = 0;
+    decreaseTimer = 1500;
+    timeElapsed = 0;
+    botGenerateTimer = 8;
 
     playerX = initialPlayerX;
     playerY = initialPlayerY;
@@ -878,48 +1080,75 @@ resume.addEventListener("click", () => {
 window.addEventListener("keydown", (event) => {
     if (event.key === 'Escape' && isPlay && !isStart) {
         Pause();
-    } else if (event.key === 'Escape' && !isStart) {
+        if (isMarket) {
+            closeMarket();
+        }
+    } else if (event.key === 'Escape' && !isStart && (parseInt(howToPlay.style.opacity))) {
+        howToPlay.style.opacity = '0';
+        menuScreen.style.opacity = '1';
+        menuScreen.style.pointerEvents = 'auto';
+    }
+    else if (event.key === 'Escape' && !isStart && !(parseInt(howToPlay.style.opacity))) {
         Resume();
-    } else if (event.code === "Space" && isStart) {
+    } else if (event.code === "Space" && isStart && isPlay) {
         isStart = false;
         home.style.opacity = '0';
         home.style.pointerEvents = 'none';
-        menuScreen.pointerEvents = 'none';
-    } else if (event.code === "Space" && !isPlay) {
+    } else if (event.code === "Space" && !isPlay && checkGameOver()) {
         Restart();
         result.style.opacity = '0';
         result.style.pointerEvents = 'none';
         isPlay = true;
         requestAnimationFrame(animate);
+    } else if (event.key.toLowerCase() === 'm' && !isMarket && isSafe && !isStart && isPlay) {
+        marketPlace.style.opacity = '1';
+        marketPlace.style.width = '70vw';
+        marketPlace.style.height = '70vh';
+        marketPlace.style.top = "15vh";
+        marketPlace.style.left = "15vw";
+        marketPlace.style.pointerEvents = "auto";
+
+        items.forEach((item) => {
+            item.style.transform = "scale(1)"
+        })
+
+        isMarket = true;
+    } else if (event.key.toLowerCase() === 'm' && isMarket) {
+        closeMarket();
     }
 })
 
 mainMenu.addEventListener("click", () => {
     if (!isPlay) {
-        menuScreen.style.opacity = '0';
+        sure.innerText = "Are you sure you want to quit?"
+        confirmation.style.pointerEvents = 'auto';
+        confirmation.style.opacity = '1';
+        confirmation.style.zIndex = '5';
+        menuScreen.style.opacity = '0.5';
         menuScreen.style.pointerEvents = 'none';
-        isStart = true;
-        isPlay = true;
-        home.style.opacity = '1';
-        home.style.pointerEvents = 'auto';
-
-        Restart();
-        requestAnimationFrame(animate);
+        isRestart = false;
     }
 })
+
+instructions.addEventListener("click", () => {
+    howToPlay.style.opacity = '1';
+    menuScreen.style.opacity = '0';
+    menuScreen.style.pointerEvents = 'none';
+})
+
 start.addEventListener("click", () => {
     isStart = false;
     home.style.opacity = '0';
     home.style.pointerEvents = 'none';
 })
 restart.addEventListener("click", () => {
-    if (confirm("Are you sure you want to restart the game?")) {
-        Restart();
-        menuScreen.style.opacity = '0';
-        menuScreen.style.pointerEvents = 'none';
-        isPlay = true;
-        requestAnimationFrame(animate);
-    }
+    sure.innerText = "Are you sure you want to Restart?"
+    confirmation.style.pointerEvents = 'auto';
+    confirmation.style.opacity = '1';
+    confirmation.style.zIndex = '5';
+    menuScreen.style.opacity = '0.5';
+    menuScreen.style.pointerEvents = 'none';
+    isRestart = true;
 })
 retry.addEventListener("click", () => {
     Restart();
@@ -928,3 +1157,39 @@ retry.addEventListener("click", () => {
     isPlay = true;
     requestAnimationFrame(animate);
 })
+
+yes.addEventListener("click", () => {
+    if (isRestart) {
+        Restart();
+        confirmation.style.pointerEvents = 'none';
+        confirmation.style.opacity = '0';
+        confirmation.style.zIndex = '0';
+        menuScreen.style.opacity = '0';
+        isPlay = true;
+        isRestart = null;
+        requestAnimationFrame(animate);
+    }
+    else if (isRestart === false) {
+        confirmation.style.pointerEvents = 'none';
+        confirmation.style.opacity = '0';
+        confirmation.style.zIndex = '0';
+        menuScreen.style.opacity = '0';
+        isStart = true;
+        isPlay = true;
+        home.style.opacity = '1';
+        home.style.pointerEvents = 'auto';
+        isRestart = null;
+        Restart();
+        requestAnimationFrame(animate);
+    }
+})
+
+no.addEventListener("click", () => {
+    confirmation.style.pointerEvents = 'none';
+    confirmation.style.opacity = '0';
+    confirmation.style.zIndex = '0';
+    menuScreen.style.opacity = '1';
+    menuScreen.style.pointerEvents = 'auto';
+    isPlay = false;
+    isRestart = null;
+});

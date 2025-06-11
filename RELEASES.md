@@ -36,3 +36,11 @@
 # v1.2
 * Added Bot Despawning
 * Added Health and Invisibility Packs
+
+# Pre v2.0
+* Added MarketPlace with Key Magnet, Large Health Pack and EMP Blast.
+* Added TRacking System BackEnd.
+* Rest of the Items won't work.
+* Added Shooter Look Angle
+* Added Instructions
+* Added Restart and Main Menu Confirmation

@@ -31,6 +31,9 @@
         <br>
         Y :
     </div>
+    <div id = "message" class = "box">
+        Press 'M' to access MarketPlace
+    </div>
     <div id = "player" class = "box">
         Player Health :
         <br>
@@ -45,13 +48,169 @@
         </span>
         <button id = "retry">PLAY AGAIN</button>
     </div>
+    <div id = "marketPlace" class = "box medium">
+        <div class = "items">
+            <span>ULTIMATE &nbspTRACKER</span>
+            <p>Once engineered by the creators of the AUREX Supercomputer, this advanced tracker scans across encrypted networks to reveal the nearest central hub and base station for 60 seconds.</p>
+            <button class = "buy">COSTS 3 SHARDS</button>
+        </div>
+        <div class = "items">
+            <span>LARGE &nbspHEALTH &nbspPACK</span>
+            <p>A military-grade injection system that rapidly reconstructs tissue and armor plating, restoring up to 20 health.</p>
+            <button class = "buy">COSTS 5 SHARDS</button>
+        </div>
+        <div class = "items">
+            <span>KEY &nbspMAGNET</span>
+            <p>Embedded with polarized quantum coils, this device attracts all nearby access keys within a 1 Block radius, bypassing manual collection protocols for the next 15 seconds.</p>
+            <button class = "buy">COSTS 8 SHARDS</button>
+        </div>
+        <div class = "items">
+            <span>EMP &nbspBLAST</span>
+            <p>A high-intensity electromagnetic pulse that overloads all hostile tech, disabling shooters and bots across a broad radius for 25 seconds.</p>
+            <button class = "buy">COSTS 10 SHARDS</button>
+        </div>
+        <div class = "items">
+            <span>INCREASE  &nbspAMMO &nbspCAPACITY</span>
+            <p>Augmented magazine cores expand your total ammunition reserves, ensuring sustained firepower in prolonged engagements.</p>
+            <button class = "buy">COSTS 00 SHARDS</button>
+        </div>
+        <div class = "items">
+            <span>UPGRADE  &nbspFIREARM</span>
+            <p>Integrates a real-time weapon firmware update, doubling damage output and increasing the fire rate, converting standard issue into high-performance armament</p>
+            <button class = "buy">COSTS 00 SHARDS</button>
+        </div>
+        <div class = "items">
+            <span>DATA  &nbspMINE</span>
+            <p>A subterranean construct left behind by the creators of AUREX supercomputer which autonomously extracts encrypted shards from the environment, generating valuable shards over time.</p>
+            <button class = "buy">COSTS 00 SHARDS</button>
+        </div>
+        <div class = "items">
+            <span>TELEPORTATION &nbspPODS</span>
+            <p>Deployable translocation units allow instant traversal between two points, perfect for flanking, escape, or rapid redeployment under fire.</p>
+            <button class = "buy">COSTS 00 SHARDS</button>
+        </div>
+    </div>
     <div id = "damage" class = "box big"></div>
+    <div id = "howToPlay" class = "box medium">
+        <p><h3>THE COLLAPSE OF CYBERIA:</h3><br>
+            The collapsing megacity of <em>Cyberia</em> stands on the edge of total ruin. Once powered by the near-omniscient central AI system known as AUREX<strong>(Autonomous Unified Resource Extraction eXecutive)</strong>, Cyberia thrived in perfect machine-governed harmony. But now, AUREX is faltering. Core systems are failing, and rogue bots are turning against the few surviving humans.<br><br>
+
+            Scattered across the endless remains of Cyberia, vital data keys, shard vaults, bot factories, and old military constructs still function — some erratically. As one of the last operatives sent by the Resistance, your mission is to stabilize outposts, harvest resources, and stay alive.<br><br>
+
+            But beware — AUREX still watches from behind the veil, and its fractured mind may be both your enemy and your only chance at survival.
+        </p>
+        <br><br>
+        <p><h3>CONTROLS:</h3><br>
+            Use the following keys to move:<br>
+            W – Move Up<br>
+            A – Move Left<br>
+            S – Move Down<br>
+            D – Move Right
+        </p>
+        <br><br>
+        <p><h3>OBJECTIVES:</h3><br>
+            - Collect keys scattered across the terrain.<br>
+            - Deposit them into <strong>Central Hubs</strong> to convert keys into shards.<br>
+            - AUREX's Health is depleting over time, deliver shards to <strong>Base Stations</strong> to recover AUREX's health.<br>
+            - Repeat and survive. The longer you last, the more you restore order — and uncover Cyberia’s secrets.
+        </p>
+        <br><br>
+        <p><h3>SAFE ZONES:</h3><br>
+            Safe Zones are your only sanctuary. Inside:<br>
+            - You are immune to all damage.<br>
+            - You can rest and plan.<br>
+            - Press <strong>'M'</strong> to access the Marketplace.
+        </p>
+        <br><br>
+        <p><h3>MARKETPLACE:</h3><br>
+            Press 'M' while in Safe Zones to spend shards on power-ups. These include:<br><br>
+
+            <strong>Ultimate Tracker</strong><br>
+            Reveals locations of Central Hubs and Base Stations for 60 seconds.<br><br>
+
+            <strong>Large Health Pack</strong><br>
+            Restores 20 Health instantly to the Player.<br><br>
+
+            <strong>Key Magnet</strong><br>
+            Automatically attracts nearby keys to you.<br><br>
+
+            <strong>EMP Blast</strong><br>
+            Emits a short-range pulse that disables nearby shooters and bots temporarily.<br><br>
+
+            <strong>Increase Ammo Capacity</strong><br>
+            Lets you store and fire more shots before needing to reload.<br><br>
+
+            <strong>Upgrade Firearm</strong><br>
+            Enhances your weapon’s damage, rate of fire.<br><br>
+
+            <strong>Data Mine</strong><br>
+            A passive resource generator that slowly produces shards over time.<br><br>
+
+            <strong>Teleportation Pods</strong><br>
+            Place two points to fast-travel between them instantly.
+        </p>
+        <br><br>
+        <p><h3>WORLD FEATURES:</h3><br>
+            - The world is infinite and ever-expanding.<br>
+            - New threats, structures, and secrets are dynamically generated.<br>
+            - Learn your surroundings, observe patterns, and adapt quickly.
+        </p>
+        <br><br>
+        <p><h3>ENEMIES & HAZARDS:</h3><br>
+            - <strong>Buildings</strong>: Static obstacles that block movement.<br>
+            - <strong>Rotating Shooters</strong>: Deadly sentries that rotate and deal damage on contact.<br>
+            - <strong>Bot Factories</strong>: Dangerous structures that constantly spawn bots. The rate increases over time.<br>
+            Avoid them unless you’re ready to fight.
+        </p>
+        <br><br>
+        <p><h3>POWER-UPS IN THE WORLD:</h3><br>
+            - <strong>Health Packs</strong>: Instantly restore 10 HP.<br>
+            - <strong>Invisibility Packs</strong>: Grant 10 seconds of invisibility, allowing you to pass bots and shooters undetected.
+        </p>
+        <br><br>
+        <p><h3>STATS:</h3><br>
+            Keep an eye on your vital stats at all times:<br>
+
+            - <strong>Top Left</strong>:<br>
+            &nbsp;&nbsp;• System Health<br>
+            &nbsp;&nbsp;• Key Count<br>
+            &nbsp;&nbsp;• Shard Count<br><br>
+
+            - <strong>Top Right</strong>:<br>
+            &nbsp;&nbsp;• Player Health<br>
+            &nbsp;&nbsp;• Score<br><br>
+
+            - <strong>Bottom Right</strong>:<br>
+            &nbsp;&nbsp;• Player Position — Current Grid coordinates.
+        </p>
+        <br><br>
+        <p><h3>SURVIVAL TIPS:</h3><br>
+            - Deposit keys regularly to reduce risk.<br>
+            - Use Safe Zones wisely — rest, plan, and upgrade.<br>
+            - Avoid tight corners near rotating shooters.<br>
+            - Time your invisibility to escape or infiltrate.<br>
+            - Spend shards intelligently; one power-up can change everything.<br>
+            - Stay moving. Standing still invites death.
+        </p>
+        <br><br>
+        <p><h3>SUMMARY:</h3><br>
+            You are the last thread in the unraveling fabric of Cyberia. Collect. Upgrade. Survive. Resist the broken machines, master the systems, and uncover the fate of AUREX — and maybe, rewrite the future.
+        </p>
+    </div>
     <div id = "menuScreen" class = "box big">
         <div id = "menu">
+            <button id = "instructions" class = "menuButtons">INSTRUCTIONS</button>
             <button id = "resume" class = "menuButtons">RESUME</button>
             <button id = "restart" class = "menuButtons">RESTART</button>
             <button id = "prefs" class = "menuButtons">PREFERENCES</button>
             <button id = "mainMenu" class = "menuButtons">MAIN MENU</button>
+        </div>
+    </div>
+    <div id = "confirmation" class = "box">
+        <span id = "sure"></span>
+        <div>
+            <button id = "yes">YES</button>
+            <button id = "no">NO</button>
         </div>
     </div>
     <button id = "pause">PAUSE</button>
