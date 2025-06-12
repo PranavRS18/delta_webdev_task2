@@ -5,16 +5,16 @@
 }
 
 html {
-    width: 100vw;
-    height: 100vh;
+    width: 100dvw;
+    height: 100dvh;
     font-family: Orbitron, sans-serif;
     overflow: hidden;
 }
 
 #world{
     position: absolute;
-    height: 100vw;
-    width: 100vw;
+    height: 100dvw;
+    width: 100dvw;
     background: #000;
     border: 0.15rem solid rgb(57, 255, 20);
     z-index: -1;
@@ -23,8 +23,8 @@ html {
 
 #camera {
     position: absolute;
-    width: 100vw;
-    height: 100vh;
+    width: 100dvw;
+    height: 100dvh;
     background-color: #000;
     z-index: 0;
     border: 0.15rem solid black;
@@ -59,10 +59,10 @@ html {
 }
 
 .big {
-    width: 100vw;
-    height: 100vh;
+    width: 100dvw;
+    height: 100dvh;
     text-align: center;
-    padding-top: 30vh;
+    padding-top: 30dvh;
     font-size: 5rem;
     z-index: 3;
     background-color: rgba(0, 0, 0, 0.6);
@@ -96,7 +96,7 @@ button:hover {
     justify-content: center;
     align-items: center;
     gap: 2rem;
-    height: 100vh;
+    height: 100dvh;
     pointer-events: none;
 }
 
@@ -106,7 +106,7 @@ button:hover {
 
 #retry {
     position: relative;
-    width: 20vw;
+    width: 20dvw;
 }
 
 #menu {
@@ -114,20 +114,20 @@ button:hover {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 30vw;
+    height: 30dvw;
     gap: 2rem;
     margin-top: -5rem;
 }
 
 .menuButtons {
     position: relative;
-    width: 20vw;
+    width: 20dvw;
 }
 
 #pause {
     bottom: 0;
     left: 0;
-    width: 8vw;
+    width: 8dvw;
 }
 
 #damage {
@@ -145,12 +145,12 @@ button:hover {
 }
 
 .home {
-    margin-top: -45vh;
+    margin-top: -45dvh;
 }
 
 #title {
     position: absolute;
-    margin-top: -90vh;
+    margin-top: -90dvh;
     font-size: 10rem;
 }
 
@@ -161,17 +161,17 @@ button:hover {
 }
 
 #start {
-    margin-top: -62.5vh ;
+    margin-top: -62.5dvh ;
     font-size: 3rem;
-    width: 20vw;
-    height: 10vh;
+    width: 20dvw;
+    height: 10dvh;
 }
 
 #message {
-    width: 40vw;
-    bottom: 0.5vh;
+    width: 40dvw;
+    bottom: 0.5dvh;
     text-align: center;
-    left: 30vw;
+    left: 30dvw;
     background-color: rgba(63, 63, 63, 0.8);
     transition: opacity 0.5s ease-in-out;
 }
@@ -180,8 +180,8 @@ button:hover {
     opacity: 0;
     width: 0;
     height: 0;
-    top: 50vh;
-    left: 50vw;
+    top: 50dvh;
+    left: 50dvw;
     transition: width 0.5s ease-in-out,
                 height 0.5s ease-in-out,
                 opacity 0.5s ease-in-out,
@@ -199,7 +199,7 @@ button:hover {
     padding: 0.5rem;
     background-color: rgba(63, 63, 63, 0.6);
     z-index: 1;
-    height: 14vh;
+    height: 14dvh;
     font-size: 1.6rem;
     color: #80FFFF;
     border: 0.2rem solid #80FFFF;
@@ -223,10 +223,10 @@ button:hover {
 #howToPlay {
     background-color: rgba(63, 63, 63, 0.85);
     opacity: 0;
-    width: 70vw;
-    height: 70vh;
-    top: 15vh;
-    left: 15vw;
+    width: 70dvw;
+    height: 70dvh;
+    top: 15dvh;
+    left: 15dvw;
     pointer-events: none;
     overflow-y: auto;
 }
@@ -240,10 +240,10 @@ button:hover {
     display: flex;
     flex-direction: column;
     opacity: 0;
-    top: 40vh;
-    left: 33.5vw;
-    width: 32.5vw;
-    height: 13vh;
+    top: 40dvh;
+    left: 33.5dvw;
+    width: 32.5dvw;
+    height: 13dvh;
     z-index: 0;
     row-gap: 0.8rem;
     pointer-events: none;

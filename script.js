@@ -32,7 +32,7 @@ const marketPlace = document.querySelector("#marketPlace");
 const message = document.querySelector("#message");
 const items = document.querySelectorAll(".items");
 let itemButton, itemButtonText;
-const itemPrices = [3, 5, 7, 10, 0, 0, 0, 0];
+const itemPrices = [3, 5, 7, 10, 10, 15, 0, 0];
 const instructions = document.querySelector("#instructions");
 const howToPlay = document.querySelector("#howToPlay");
 const confirmation = document.querySelector("#confirmation");
@@ -79,6 +79,8 @@ const buildingHeight = rectHeight / 3;
 let buildings = [];
 let blockBuildings = [];
 let renderedBuildings = [];
+let damagedBuilding = [];
+let initialBuildingHealth = 3;
 
 // Shooter
 let shooterX, shooterY, shooterBuilding, shooterAngle;
@@ -251,7 +253,7 @@ function createBlock(globalX, globalY) {
     for (let building = 0; building < nBuildings; building++) {
         buildingX = rectX + Math.random() * (rectWidth - buildingWidth);
         buildingY = rectY + Math.random() * (rectHeight - buildingHeight);
-        buildings.push([buildingX, buildingY, 2]);
+        buildings.push([buildingX, buildingY, initialBuildingHealth]);
     }
 
     // Shooter
@@ -352,6 +354,8 @@ function drawBlock(worldX, worldY) {
     if (playerX > worldX * blockWidth && playerX < (worldX + 1) * blockWidth
         && playerY > worldY * blockHeight && playerY < (worldY + 1) * blockHeight) {
         position.innerText = `Global Player Position\nX : ${globalBlockX}\nY : ${globalBlockY}`;
+        globalPlayerX = globalBlockX;
+        globalPlayerY = globalBlockY;
     }
 
     if (!global.has(`${globalBlockX}, ${globalBlockY}`)) {
@@ -390,8 +394,19 @@ function drawBlock(worldX, worldY) {
         buildingX = worldX * blockWidth + blockBuildings[building][0];
         buildingY = worldY * blockHeight + blockBuildings[building][1];
         ctx.fillRect(buildingX, buildingY, buildingWidth, buildingHeight);
-        renderedBuildings.push([buildingX, buildingY]);
+        renderedBuildings.push([buildingX, buildingY, blockBuildings[building][2]]);
     }
+
+    blockBuildings.forEach((building, idx, buildings) => {
+        if (damagedBuilding[0] === worldX * blockWidth + building[0] && damagedBuilding[1] === worldY * blockHeight + building[1]) {
+            buildings[idx] = [building[0], building[1], damagedBuilding[2]];
+            return true;
+        }
+       if (buildings[idx][2] <= 0) {
+           blockBuildings.splice(idx, 1);
+           if (idx === 0) blockData.shooter = [];
+       }
+    });
 
     blockKeys = blockData.keys;
     blockKeys.forEach(([keyX, keyY]) => {
@@ -671,6 +686,32 @@ function drawBots() {
     })
 }
 
+function isBulletCollided(buildingX, buildingY, bulletX, bulletY, bulletAngle) {
+    newBulletX = (3 - globalX) * blockWidth + bulletX;
+    newBulletY = (3 + globalY - Math.floor(bulletY / blockHeight)) * blockHeight + blockHeight - ((bulletY % blockHeight) + blockHeight) % blockHeight;
+
+    // Clamping Function
+    nearestX = Math.max(buildingX, Math.min(buildingX + buildingWidth, newBulletX));
+    nearestY = Math.max(buildingY, Math.min(buildingY + buildingHeight, newBulletY));
+
+    distX = newBulletX - nearestX
+    distY = newBulletY - nearestY
+
+    if (bulletRadius ** 2 >= distX ** 2 + distY ** 2) {
+        if (Math.abs(distX) > Math.abs(distY)) {
+            bulletX += ((distX >= 0) ? 1 : -1) * bulletSpeed
+            bulletX += ((distX === 0 && bulletAngle === 0) ? 2 : 0) * bulletSpeed
+            return ['X', bulletX, bulletY];
+        }
+        else {
+            bulletY += ((distY > 0) ? -1 : 1) * bulletSpeed
+            bulletY += ((distY === 0 && bulletAngle === Math.PI / 2) ? -2 : 0) * bulletSpeed
+            return ['Y', bulletX, bulletY];
+        }
+    }
+    return ['N', bulletX, bulletY];
+}
+
 // Player
 const playerRadius = 0.8 * remInPx;
 const playerSpeed = 0.25 * remInPx;
@@ -682,9 +723,9 @@ let playerY = initialPlayerY;
 let playerLookAngle = 3 * Math.PI / 2;
 const playerLookArc = Math.PI / 8;
 const playerLookAngleSpeed = Math.PI / 15;
-const epsilon = 0.05;
 let globalX = 0;
 let globalY = 0;
+let globalPlayerX, globalPlayerY;
 
 // Track Keys Pressed
 window.addEventListener('keydown', (event) => {
@@ -708,7 +749,7 @@ function playerMove() {
        isCollidedDY ||= (collision === '-Y');
     });
 
-    playerLookAngle = (playerLookAngle % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI)
+    playerLookAngle %= 2 * Math.PI;
 
     if (playerHealth > 0 && !isStart) {
 
@@ -721,6 +762,7 @@ function playerMove() {
         // Player +X
         if (!isCollidedRX) {
             if (keysPressed['a']) {
+                playerLookAngle = (playerLookAngle < 0) ? playerLookAngle + 2 * Math.PI : playerLookAngle;
                 playerX -= playerSpeed;
                 playerLookAngle -= Math.sin((playerLookAngle - Math.PI) / 2) * playerLookAngleSpeed;
                 if (playerX > initialPlayerX + blockWidth * 3 / 4 || playerX < initialPlayerX - blockWidth * 3 / 4) {
@@ -731,6 +773,7 @@ function playerMove() {
         // Player -X
         if (!isCollidedLX) {
             if (keysPressed['d']) {
+                playerLookAngle = (playerLookAngle < Math.PI) ? playerLookAngle + 2 * Math.PI : playerLookAngle;
                 playerX += playerSpeed;
                 playerLookAngle -= Math.sin(playerLookAngle / 2 - Math.PI) * playerLookAngleSpeed;
                 if (playerX > initialPlayerX + blockWidth * 3 / 4 || playerX < initialPlayerX - blockWidth * 3 / 4) {
@@ -742,6 +785,7 @@ function playerMove() {
         // Player +Y
         if (!isCollidedUY) {
             if (keysPressed['w']) {
+                playerLookAngle = (playerLookAngle < Math.PI / 2) ? playerLookAngle + 2 * Math.PI : playerLookAngle;
                 playerY -= playerSpeed;
                 playerLookAngle -= Math.sin((playerLookAngle - 3 * Math.PI / 2) / 2) * playerLookAngleSpeed;
                 if (playerY > initialPlayerY + blockHeight * 3 / 4 || playerY < initialPlayerY - blockHeight * 3 / 4) {
@@ -754,8 +798,9 @@ function playerMove() {
         // Camera
         if (!isCollidedDY) {
             if (keysPressed['s']) {
+                playerLookAngle = (playerLookAngle <  3 * Math.PI / 2) ? playerLookAngle + 2 * Math.PI : playerLookAngle;
                 playerY += playerSpeed;
-                playerLookAngle -= Math.sin((playerLookAngle - Math.PI / 2) / 2) * playerLookAngleSpeed;
+                playerLookAngle -= Math.sin((playerLookAngle - 5 * Math.PI / 2) / 2) * playerLookAngleSpeed;
                 if (playerY > initialPlayerY + blockHeight * 3 / 4 || playerY < initialPlayerY - blockHeight * 3 / 4) {
                     if (keysPressed['s']) cameraY += playerSpeed;
                 }
@@ -824,9 +869,65 @@ function animate() {
     renderedBuildings = [];
     damage.style.opacity = '0';
     drawCity();
+    damagedBuilding = [];
     botMove();
     drawBots();
     playerMove();
+
+    bullets.forEach((bullet, idx, bullets) => {
+        bullet[2] %= 2 * Math.PI;
+        bullet[2] = (bullet[2] < 0) ? bullet[2] + Math.PI * 2 : bullet[2];
+        renderedBuildings.some((building, index) => {
+            collision = isBulletCollided(building[0], building[1], bullet[0], bullet[1], bullet[2])
+            if (collision[0] === 'Y') {
+                bullet[2] *= -1;
+                bullet[3] -= 1;
+                renderedBuildings[index][2] -= ammoDamage;
+                damagedBuilding = renderedBuildings[index];
+                return true;
+            } if (collision[0] === 'X') {
+                bullet[2] = Math.PI - bullet[2];
+                bullet[3] -= 1;
+                renderedBuildings[index][2] -= ammoDamage;
+                damagedBuilding = renderedBuildings[index];
+                return true;
+            }
+        });
+        if (!bullet[3]) {
+            bullets.splice(idx, 1);
+            ammoCapacity++;
+        }
+        else bullets[idx] = [collision[1] - bulletSpeed / (6 - bullet[3]) * 2 * Math.cos(bullet[2]), collision[2] + bulletSpeed / (6 - bullet[3]) * 2 * Math.sin(bullet[2]), bullet[2], bullet[3]];
+
+    });
+
+    bullets.forEach(bullet => {
+        [bulletX, bulletY] = bullet.slice(0, 2);
+        newBulletX = (3 - globalX) * blockWidth + bulletX;
+        newBulletY = (3 + globalY - Math.floor(bulletY / blockHeight)) * blockHeight + blockHeight - ((bulletY % blockHeight) + blockHeight) % blockHeight;
+
+        ctx.beginPath();
+        ctx.fillStyle = 'black';
+        ctx.arc(newBulletX, newBulletY, bulletRadius, 0, 2 * Math.PI, true);
+        ctx.closePath();
+        ctx.fill();
+    });
+
+    items.forEach((item, idx, items) => {
+        itemButton = Array.from(item.children).reverse()[0];
+        if (idx === 4 && ammoCapacity === 20) {
+            itemButtonText = "MAXED AMMO";
+        }
+        else if (idx === 5 && ammoDamage === 3) {
+            itemButtonText = "MAXED FIREPOWER";
+        }
+        else if (itemButton.matches(":hover")) {
+            itemButtonText = `BUY FOR ${itemPrices[idx]} SHARDS`;
+        } else {
+            itemButtonText = `COSTS ${itemPrices[idx]} SHARDS`;
+        }
+        itemButton.innerText = itemButtonText;
+    });
 
     if (isTracking) {
         requestAnimationFrame(tracker);
@@ -884,11 +985,11 @@ function closeMarket() {
 }
 
 requestAnimationFrame(animate);
-let decreaseTimer = 1500;
+let decreaseTimer = 3000;
 function decreaseHealth() {
     if (systemHealth > 0 && isPlay && !isStart) {
         systemHealth -= 2;
-        decreaseTimer = Math.max(750, 1500 - timeElapsed);
+        decreaseTimer = Math.max(1500, 3000 - 2 * timeElapsed);
     }
     setTimeout(decreaseHealth, decreaseTimer);
 }
@@ -913,7 +1014,6 @@ setInterval(() => {
     if (isTracking) {
         isTracking--;
     }
-
 }, 1000)
 
 let factoryX, factoryY, botGenerate
@@ -977,7 +1077,6 @@ function tracker() {
                 }
             }
         }
-        console.log(nearestBase);
         requestAnimationFrame(tracker)
     }
 }
@@ -998,20 +1097,17 @@ function getItems(idx) {
            isEMPBlast = 25;
            bots = [];
         }
+        else if (idx === 4) {
+            ammoCapacity += 5;
+            itemPrices[4] += 10;
+        } else if (idx === 5) {
+            ammoDamage += 1;
+            itemPrices[5] += 20;
+        }
     }
 }
 
 setInterval(() => {
-    items.forEach((item, idx, items) => {
-        itemButton = Array.from(item.children).reverse()[0];
-        if (itemButton.matches(":hover")) {
-            itemButtonText = `BUY FOR ${itemPrices[idx]} SHARDS`;
-        } else {
-            itemButtonText = `COSTS ${itemPrices[idx]} SHARDS`;
-        }
-        itemButton.innerText = itemButtonText;
-    });
-
     if (isSafe) {
         message.style.opacity = '1';
     } else {
@@ -1023,6 +1119,9 @@ setInterval(() => {
 
     if (isEMPBlast > 0) {
         isEMPBlast -= 0.02;
+    }
+    else {
+        isEMPBlast = 0;
     }
 
     if (isEMPBlast < 3) {
@@ -1039,7 +1138,9 @@ setInterval(() => {
 items.forEach((item, idx) => {
     itemButton = Array.from(item.children).reverse()[0];
     itemButton.addEventListener('click', () => {
-        if (playerShards >= itemPrices[idx]) {
+        if (idx === 4 && ammoCapacity === 20) {}
+        else if (idx === 5 && ammoDamage === 3) {}
+        else if (playerShards >= itemPrices[idx]) {
             playerShards -= itemPrices[idx];
             getItems(idx);
         }
@@ -1098,8 +1199,21 @@ resume.addEventListener("click", () => {
     Resume()
 })
 
+// Shoot
+let bullets = [];
+const bulletSpeed = 0.8 * remInPx;
+let ammoCapacity = 10;
+let ammoDamage = 1;
+let bulletX, bulletY, bulletRadius = 0.4 * remInPx;
+let newBulletX, newBulletY;
 window.addEventListener("keydown", (event) => {
-    if (event.key === 'Escape' && isPlay && !isStart) {
+    if (event.code === "Space" && isPlay && !isStart) {
+        if (ammoCapacity) {
+            bullets.push([globalPlayerX * blockWidth + playerX % blockWidth, globalPlayerY * blockHeight + blockHeight - playerY % blockHeight, playerLookAngle + Math.PI, 5]);
+            ammoCapacity--;
+        }
+    }
+    else if (event.key === 'Escape' && isPlay && !isStart) {
         Pause();
         if (isMarket) {
             closeMarket();
@@ -1137,12 +1251,6 @@ window.addEventListener("keydown", (event) => {
         isMarket = true;
     } else if (event.key.toLowerCase() === 'm' && isMarket) {
         closeMarket();
-    }
-})
-
-window.addEventListener("keydown", (event) => {
-    if (event.code === "Space" && isPlay && !isStart) {
-
     }
 })
 

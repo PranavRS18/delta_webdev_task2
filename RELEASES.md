@@ -49,3 +49,10 @@
 * Added Smoother Look Angle
 * Added Ultimate Tracker
 * Fixed Instructions Bug
+
+# v2.0
+* Added Shooting System
+* Added Increase Ammo and Increase Damage in MarketPlace
+* Fixed Look Angle Bug
+* Fixed Other Bugs
+* Bugs Known: Sometimes while Bouncing, it will start repeatedly bouncing with that building.
