@@ -66,3 +66,7 @@
 # v2.2
 * Added Data Mines
 * Added "Shift" + "Z" uses Data Mines
+
+# v2.3
+* Added Teleportation Pods
+* Added "Shift" + "X" uses Data Mines

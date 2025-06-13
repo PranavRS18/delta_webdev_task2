@@ -32,7 +32,7 @@ const marketPlace = document.querySelector("#marketPlace");
 const message = document.querySelector("#message");
 const items = document.querySelectorAll(".items");
 let itemButton, itemButtonText;
-let itemPrices = [3, 5, 7, 10, 10, 15, 0, 0];
+let itemPrices = [3, 5, 7, 10, 10, 15, 15, 20];
 const instructions = document.querySelector("#instructions");
 const howToPlay = document.querySelector("#howToPlay");
 const confirmation = document.querySelector("#confirmation");
@@ -56,6 +56,8 @@ let isShiftPressed = false;
 let dataMines = [];
 let dataShards = [];
 
+let teleports = [];
+
 // World Variables
 let isStart = true;
 let isPlay = true;
@@ -65,7 +67,7 @@ const nRows = 7;
 const blockWidth = world.width / nColumns;
 const blockHeight = world.height / nRows;
 let playerKeys = 0;
-let playerShards = 0;
+let playerShards = 100;
 let playerHealth = 50;
 const playerHealthDecrease = 0.4;
 let playerScore = 0;
@@ -908,6 +910,32 @@ function checkGameOver() {
     return false;
 }
 
+let X, Y, shuffleTeleport, isTeleportIn = false;
+function callTeleport(teleport, idx) {
+    teleports.splice(idx, 1);
+    if (teleports.length > 0) {
+        shuffleTeleport = shuffleArray(teleports)[0];
+        X = shuffleTeleport[0];
+        Y = shuffleTeleport[1];
+
+        cameraX = blockWidth - (5 * blockWidth * (cameraScale - 1)) / 2;
+        cameraY = blockHeight * 2 - (3 * blockHeight * (cameraScale - 1)) / 2;
+        globalX = X;
+        globalY = Y;
+        playerX = initialPlayerX - (blockWidth / 2 - shuffleTeleport[2]);
+        playerY = initialPlayerY - (blockHeight / 2 - shuffleTeleport[3]);
+    }
+    teleports.push(teleport);
+}
+
+function checkIfTeleportIn(teleport) {
+    teleportX = (teleport[0] + 3 - globalX) * blockWidth + teleport[2];
+    teleportY = (3 + globalY - teleport[1]) * blockHeight + teleport[3];
+
+    return (teleportY - playerY) ** 2 + (teleportX - playerX) ** 2 > (3 * playerRadius) ** 2;
+}
+
+let dataShardX, dataShardY, teleportX, teleportY;
 function animate() {
     ctx.clearRect(0, 0, world.clientWidth, world.clientHeight);
     cameraCtx.clearRect(0, 0, camera.clientWidth, camera.clientHeight);
@@ -916,8 +944,24 @@ function animate() {
     drawCity();
     damagedBuilding = [];
 
+    teleports.forEach((teleport, idx) => {
+        teleportX = (teleport[0] + 3 - globalX) * blockWidth + teleport[2];
+        teleportY = (3 + globalY - teleport[1]) * blockHeight + teleport[3];
+        if ((teleportY - playerY) ** 2 + (teleportX - playerX) ** 2 < (3 * playerRadius) ** 2 && !isTeleportIn) callTeleport(teleport, idx);
+
+        ctx.beginPath();
+        ctx.strokeStyle = "magenta";
+        ctx.fillStyle = '#BF00FF';
+        ctx.arc(teleportX, teleportY, playerRadius * 2, 0, 2 * Math.PI, false);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.fill();
+        ctx.closePath();
+    });
+
+    isTeleportIn = !(teleports.every(teleport => checkIfTeleportIn(teleport)));
+
     dataMines.forEach(dataMine => {
-        console.log(dataMine)
         ctx.beginPath();
         ctx.strokeStyle = "#81D4FA";
         ctx.fillStyle = '#B3E5FC';
@@ -928,7 +972,6 @@ function animate() {
         ctx.closePath();
     });
 
-    let dataShardX, dataShardY;
     dataShards.forEach((shard,idx) => {
         dataShardX = (shard[0] + 3 - globalX) * blockWidth + shard[2];
         dataShardY = (3 + globalY - shard[1]) * blockHeight + shard[3];
@@ -1197,7 +1240,7 @@ function getItems(idx) {
             if (!isHackMode) {
                 itemPrices[5] += 10;
             }
-        } else if (idx === 6) {
+        } else if (idx > 5) {
             inventoryItems[idx - 2] += 1;
         }
     }
@@ -1220,8 +1263,10 @@ function usePowerup(idx) {
             bots = [];
         }
         else if (idx === 6) {
-            inventoryItems[4]--;
             dataMines.push([globalPlayerX, globalPlayerY, playerX % blockWidth, playerY % blockHeight, 0, 0]);
+        } else if (idx === 7) {
+            isTeleportIn = true;
+            teleports.push([globalPlayerX, globalPlayerY, playerX % blockWidth, ((playerY % blockHeight) + blockHeight) % blockHeight]);
         }
     }
 }
@@ -1416,10 +1461,12 @@ window.addEventListener("keydown", (event) => {
         else if (event.key === "@") invPower = 1
         else if (event.key === "#") invPower = 2
         else if (event.key === "$") invPower = 3
-        else if (event.key.toUpperCase() === "Z") invPower = 6;
+        else if (event.key.toLowerCase() === "z") invPower = 4;
+        else if (event.key.toLowerCase() === "x") invPower = 5;
         if (invPower !== -1 && inventoryItems[invPower] > 0) {
-            inventoryItems[invPower] -= 1;
-            usePowerup(invPower);
+            inventoryItems[invPower]--;
+            if (invPower < 4) usePowerup(invPower);
+            else usePowerup(invPower + 2);
         }
     }
 })

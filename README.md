@@ -66,6 +66,7 @@ You can now instantly activate the first four power-ups in your inventory using:
 - **Shift + 3** for Key Magnet,
 - **Shift + 4** for EMP Blast.
 - **Shift + Z** for Data Mine.
+- **Shift + X** for Teleportation Pod
 
 
 ## Preferences Menu
@@ -82,3 +83,4 @@ Added a Preferences screen accessible from the title or pause menu. Includes:
 - Time invisibility for infiltration or escape.
 - Every shard counts — spend wisely.
 - Keep moving. Stillness is death.
+- Teleportation Pods are Legendary Items.
