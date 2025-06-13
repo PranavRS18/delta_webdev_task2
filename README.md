@@ -65,6 +65,7 @@ You can now instantly activate the first four power-ups in your inventory using:
 - **Shift + 2** for Large Health Pack.
 - **Shift + 3** for Key Magnet,
 - **Shift + 4** for EMP Blast.
+- **Shift + Z** for Data Mine.
 
 
 ## Preferences Menu

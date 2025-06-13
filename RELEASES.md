@@ -62,3 +62,7 @@
 * Using "Shift" + '1', '2', '3', '4' uses first 4 Powerups
 * Added Preferences but Music doesn't work.
 * Preferences Hack Mode and Reset Score.
+
+# v2.2
+* Added Data Mines
+* Added "Shift" + "Z" uses Data Mines

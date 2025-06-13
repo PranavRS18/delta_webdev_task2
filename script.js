@@ -52,6 +52,10 @@ let isMarket = false;
 let isRestart = null;
 let isShiftPressed = false;
 
+// Data Mines
+let dataMines = [];
+let dataShards = [];
+
 // World Variables
 let isStart = true;
 let isPlay = true;
@@ -487,7 +491,7 @@ function drawBlock(worldX, worldY) {
     }
 
     if (blockData.invisibility) {
-        ctx.strokeStyle = '#8B0000';
+        ctx.strokeStyle = 'gray';
         ctx.fillStyle = 'beige';
         ctx.beginPath();
         ctx.arc(invisibilityX,
@@ -911,6 +915,39 @@ function animate() {
     damage.style.opacity = '0';
     drawCity();
     damagedBuilding = [];
+
+    dataMines.forEach(dataMine => {
+        console.log(dataMine)
+        ctx.beginPath();
+        ctx.strokeStyle = "#81D4FA";
+        ctx.fillStyle = '#B3E5FC';
+        ctx.arc((dataMine[0] + 3 - globalX) * blockWidth + dataMine[2], (3 + globalY - dataMine[1]) * blockHeight + dataMine[3], playerRadius * 2, 0, 2 * Math.PI, false);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.fill();
+        ctx.closePath();
+    });
+
+    let dataShardX, dataShardY;
+    dataShards.forEach((shard,idx) => {
+        dataShardX = (shard[0] + 3 - globalX) * blockWidth + shard[2];
+        dataShardY = (3 + globalY - shard[1]) * blockHeight + shard[3];
+
+        if ((dataShardX - playerX) ** 2 + (dataShardY - playerY) ** 2 < (playerRadius * 1.75) ** 2){
+            dataShards.splice(idx, 1);
+            playerShards++;
+        } else {
+            ctx.beginPath();
+            ctx.strokeStyle = "#1976D2";
+            ctx.fillStyle = '#0D47A1';
+            ctx.arc(dataShardX, dataShardY, playerRadius * 3 / 4, 0, 2 * Math.PI, false);
+            ctx.closePath();
+            ctx.stroke();
+            ctx.fill();
+            ctx.closePath();
+        }
+    });
+
     botMove();
     drawBots();
     playerMove();
@@ -1007,7 +1044,6 @@ function animate() {
         else owns.innerHTML = `OWNED : ${inventoryItems[idx]}&nbsp`
     });
 
-
     details.innerText = `System Health : ${systemHealth}\nKeys : ${playerKeys}\nShards : ${playerShards}`;
     player.innerText = `Player Health : ${Math.ceil(playerHealth)}\nPlayer Score : ${Math.floor(playerScore)}\nHigh Score : ${highScore}`;
     checkGameOver();
@@ -1049,6 +1085,7 @@ function decreaseHealth() {
 
 setTimeout(decreaseHealth, decreaseTimer);
 
+let dataRandom;
 setInterval(() => {
     if (isPlay && !isStart && !isHackMode) {
         playerScore += 0.5;
@@ -1067,6 +1104,16 @@ setInterval(() => {
     if (isTracking) {
         isTracking--;
     }
+    dataMines.forEach((mine, idx) => {
+        dataMines[idx][5] += 1;
+        if (dataMines[idx][5] === Math.max(15 - dataMines[idx][4], 8)) {
+            dataMines[idx][4]++;
+            dataMines[idx][5] = 0;
+            if (Math.random() < 0.5) dataRandom = Math.random() * 0.5 - 2
+            else dataRandom = Math.random() * 0.5 + 1.5
+            dataShards.push([dataMines[idx][0], dataMines[idx][1], dataMines[idx][2] + dataRandom * playerRadius, dataMines[idx][3] + dataRandom * playerRadius * 2]);
+        }
+    })
 }, 1000)
 
 let factoryX, factoryY, botGenerate
@@ -1150,6 +1197,8 @@ function getItems(idx) {
             if (!isHackMode) {
                 itemPrices[5] += 10;
             }
+        } else if (idx === 6) {
+            inventoryItems[idx - 2] += 1;
         }
     }
 }
@@ -1169,6 +1218,10 @@ function usePowerup(idx) {
         else if (idx === 3) {
             isEMPBlast = 25;
             bots = [];
+        }
+        else if (idx === 6) {
+            inventoryItems[4]--;
+            dataMines.push([globalPlayerX, globalPlayerY, playerX % blockWidth, playerY % blockHeight, 0, 0]);
         }
     }
 }
@@ -1256,7 +1309,7 @@ function Restart() {
     cameraY = blockHeight * 2 - (3 * blockHeight * (cameraScale - 1)) / 2;
     bots = [];
     damagedBuilding = [];
-    ammoCapacity = 10;
+    ammoCapacity = 5;
     ammoDamage = 1;
     isInventory = false;
     isShiftPressed = false;
@@ -1283,7 +1336,7 @@ resume.addEventListener("click", () => {
 // Shoot
 let bullets = [];
 const bulletSpeed = 0.8 * remInPx;
-let ammoCapacity = 10;
+let ammoCapacity = 5;
 let ammoDamage = 1;
 let bulletX, bulletY, bulletRadius = 0.4 * remInPx;
 let newBulletX, newBulletY;
@@ -1363,6 +1416,7 @@ window.addEventListener("keydown", (event) => {
         else if (event.key === "@") invPower = 1
         else if (event.key === "#") invPower = 2
         else if (event.key === "$") invPower = 3
+        else if (event.key.toUpperCase() === "Z") invPower = 6;
         if (invPower !== -1 && inventoryItems[invPower] > 0) {
             inventoryItems[invPower] -= 1;
             usePowerup(invPower);
@@ -1372,9 +1426,12 @@ window.addEventListener("keydown", (event) => {
 
 use.forEach((use, idx) => {
     use.addEventListener('click', () => {
-        if (inventoryItems[idx]) {
+        if (inventoryItems[idx] && idx < 4) {
             inventoryItems[idx] -= 1;
             usePowerup(idx);
+        } else if (inventoryItems[idx]) {
+            inventoryItems[idx + 2] -= 1;
+            usePowerup(idx + 2);
         }
         use.blur();
     })
@@ -1463,6 +1520,7 @@ yes.addEventListener("click", () => {
         home.style.opacity = '1';
         home.style.pointerEvents = 'auto';
         isRestart = null;
+        isHackMode = false;
         Restart();
         requestAnimationFrame(animate);
     }
