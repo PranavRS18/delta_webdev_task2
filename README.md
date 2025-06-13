@@ -18,10 +18,10 @@ Cyberia, once a megacity powered by the AI AUREX (Autonomous Unified Resource Ex
 
 ## BLOCK TYPES
 
-- 🟧 **Central Hub** – Converts keys into shards.
-- 🔵 **Base Station** – Uses shards to restore AUREX’s health.
-- ⚪ **Bot Factory** – Spawns enemy bots over time.
-- 🟨 **Safe Zone** – No damage, access the Marketplace.
+- **Central Hub** – Converts keys into shards.
+- **Base Station** – Uses shards to restore AUREX’s health.
+- **Bot Factory** – Spawns enemy bots over time.
+- **Safe Zone** – No damage, access the Marketplace.
 
 ## MARKETPLACE (Safe Zones Only)
 
@@ -56,6 +56,22 @@ Cyberia, once a megacity powered by the AI AUREX (Autonomous Unified Resource Ex
 - **Top Left**: System Health, Keys, Shards.
 - **Top Right**: Player HP, Score.
 - **Bottom Right**: Current Grid Position.
+# Inventory System
+Access and use collected power-ups at any time via the new Inventory interface by pressing 'I'.
+
+## Quick Use Powerups (Shift + Number Keys)
+You can now instantly activate the first four power-ups in your inventory using:
+- **Shift + 1** for Ultimate Tracker.
+- **Shift + 2** for Large Health Pack.
+- **Shift + 3** for Key Magnet,
+- **Shift + 4** for EMP Blast.
+
+
+## Preferences Menu
+Added a Preferences screen accessible from the title or pause menu. Includes:
+- Toggle **Hack Mode**: A special developer/debug mode.
+- **Reset Score**: Wipe your current high score and progress to start fresh.
+- (Note: Music toggle is present but not functional yet.)
 
 ## SURVIVAL TIPS
 

@@ -11,7 +11,7 @@
     <canvas id="world"></canvas>
     <canvas id = "camera"></canvas>
     <div id = "home" class = "box big">
-        <span id = "title" class = "home">CYBERSCAPE</span>
+        <span id = "title" class = "home">CYBERSCAPE<br><p>THE COLLAPSE OF CYBERIA</p></span>
         <br>
         <button id = "start" class = "home">START</button>
         <br>
@@ -38,6 +38,8 @@
         Player Health :
         <br>
         Player Score :
+        <br>
+        High Score :
     </div>
     <div id = "result" class = "box big">
         <span id = "resultText">
@@ -51,7 +53,7 @@
     <div id = "marketPlace" class = "box medium">
         <div class = "items">
             <span>ULTIMATE &nbspTRACKER</span>
-            <p>Once engineered by the creators of the AUREX Supercomputer, this advanced tracker scans across encrypted networks to reveal the nearest central hub and base station for 60 seconds.</p>
+            <p>Once engineered by the creators of AUREX, this tracker scans across encrypted networks to reveal the nearest central hub and base station for 30 seconds.</p>
             <button class = "buy">COSTS 3 SHARDS</button>
         </div>
         <div class = "items">
@@ -81,7 +83,7 @@
         </div>
         <div class = "items">
             <span>DATA  &nbspMINE</span>
-            <p>A subterranean construct left behind by the creators of AUREX supercomputer which autonomously extracts encrypted shards from the environment, generating valuable shards over time.</p>
+            <p>A subterranean construct left behind by the creators of AUREX which autonomously extracts encrypted shards from the environment, generating valuable shards over time.</p>
             <button class = "buy">COSTS 00 SHARDS</button>
         </div>
         <div class = "items">
@@ -91,9 +93,54 @@
         </div>
     </div>
     <div id = "damage" class = "box big"></div>
+    <div id = "inventory" class = "box medium">
+        <div id = "userDetails">
+            <div id = "companyName">AUTONOMOUS UNIFIED RECONNAISSANCE and ENFORCEMENT EXECUTIVE, CYBERIA</div>
+            <div>EMPLOYEE ID : #18P05RS</div>
+            <div class = "name">NAME : EDWARD XYREK</div>
+            <div>DATE OF BIRTH : 13 / 06 / 2006</div>
+            <div>ADDRESS : SECTOR 5X18, SOUTH DRIFT, CYBERIA</div>
+        </div>
+        <div id = "inv">
+            <div id = "items">
+                <div class = "item">ULTIMATE TRACKER</div>
+                <div class = "item">LARGE HEALTH PACK</div>
+                <div class = "item">KEY MAGNET</div>
+                <div class = "item">EMP BLAST</div>
+                <div class = "item">DATA MINES</div>
+                <div class = "item">TELEPORTATION PODS</div>
+            </div>
+            <div id = "uses">
+                <div class = "owns">
+                    <span class = "owned">OWNED : &nbsp0&nbsp</span>
+                    <button class = "use">USE</button>
+                </div>
+                <div class = "owns">
+                    <span class = "owned">OWNED : &nbsp0&nbsp</span>
+                    <button class = "use">USE</button>
+                </div>
+                <div class = "owns">
+                    <span class = "owned">OWNED : &nbsp0&nbsp</span>
+                    <button class = "use">USE</button>
+                </div>
+                <div class = "owns">
+                    <span class = "owned">OWNED : &nbsp0&nbsp</span>
+                    <button class = "use">USE</button>
+                </div>
+                <div class = "owns">
+                    <span class = "owned">OWNED : &nbsp0&nbsp</span>
+                    <button class = "use">USE</button>
+                </div>
+                <div class = "owns">
+                    <span class = "owned">OWNED : &nbsp0&nbsp</span>
+                    <button class = "use">USE</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <div id = "howToPlay" class = "box medium">
         <p><h3>THE COLLAPSE OF CYBERIA:</h3><br>
-            The collapsing megacity of <em>Cyberia</em> stands on the edge of total ruin. Once powered by the near-omniscient central AI system known as AUREX<strong>(Autonomous Unified Resource Extraction eXecutive)</strong>, Cyberia thrived in perfect machine-governed harmony. But now, AUREX is faltering. Core systems are failing, and rogue bots are turning against the few surviving humans.<br><br>
+            The collapsing City of <em>Cyberia</em> stands on the edge of total ruin. Once powered by the near-omniscient central AI system known as AUREX<strong>(Autonomous Unified Reconnaissance and Enforcement eXecutive)</strong>, Cyberia thrived in perfect machine-governed harmony. But now, AUREX is faltering. Core systems are failing, and rogue bots are turning against the few surviving humans.<br><br>
 
             Scattered across the endless remains of Cyberia, vital data keys, shard vaults, bot factories, and old military constructs still function — some erratically. As one of the last operatives sent by the Resistance, your mission is to stabilize outposts, harvest resources, and stay alive.<br><br>
 
@@ -139,7 +186,7 @@
             Press 'M' while in Safe Zones to spend shards on power-ups. These include:<br><br>
 
             <strong>Ultimate Tracker</strong><br>
-            Reveals locations of Central Hubs and Base Stations for 60 seconds.<br><br>
+            Reveals locations of Central Hubs and Base Stations for 30 seconds.<br><br>
 
             <strong>Large Health Pack</strong><br>
             Restores 20 Health instantly to the Player.<br><br>
@@ -218,6 +265,19 @@
             <button id = "prefs" class = "menuButtons">PREFERENCES</button>
             <button id = "mainMenu" class = "menuButtons">MAIN MENU</button>
         </div>
+    </div>
+    <div id = "preferences" class = "box medium">
+        <span>PREFERENCES</span>
+        <div>
+            <label for = "backMusic" id = "backMusicLabel">Echoes of the City : </label>
+            <input type = "range" name = "backMusic" id = "backMusic" min = "0" max = "100" value = "0">
+        </div>
+        <div>
+            <label for = "SFXMusic" id = "SFXMusicLabel">Fragments of Impact : </label>
+            <input type = "range" name = "SFXMusic" id = "SFXMusic" min = "0" max = "100" value = "0">
+        </div>
+        <button id = "hackMode">INITIATE HACK MODE</button>
+        <button id = "resetScore">RESET SCORE</button>
     </div>
     <div id = "confirmation" class = "box">
         <span id = "sure"></span>

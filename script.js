@@ -32,17 +32,25 @@ const marketPlace = document.querySelector("#marketPlace");
 const message = document.querySelector("#message");
 const items = document.querySelectorAll(".items");
 let itemButton, itemButtonText;
-const itemPrices = [3, 5, 7, 10, 10, 15, 0, 0];
+let itemPrices = [3, 5, 7, 10, 10, 15, 0, 0];
 const instructions = document.querySelector("#instructions");
 const howToPlay = document.querySelector("#howToPlay");
 const confirmation = document.querySelector("#confirmation");
 const sure = document.querySelector("#sure");
 const yes = document.querySelector("#yes");
 const no = document.querySelector("#no");
+const inventory = document.querySelector("#inventory");
+const owned = Array.from(document.querySelectorAll(".owned"));
+const use = Array.from(document.querySelectorAll(".use"));
+const prefs = document.querySelector("#prefs");
+const preferences = document.querySelector("#preferences");
+const hackMode = document.querySelector("#hackMode");
+const resetScore = document.querySelector("#resetScore");
 
 // Variables
 let isMarket = false;
 let isRestart = null;
+let isShiftPressed = false;
 
 // World Variables
 let isStart = true;
@@ -322,7 +330,7 @@ function createShards(rectX, rectY) {
         if (keysToShards <= playerKeys) {
             playerKeys -= keysToShards;
             playerShards++;
-            playerScore += 20;
+            if (!isHackMode) playerScore += 20;
         }
     }
 }
@@ -332,8 +340,8 @@ function shardsToHealth(rectX, rectY) {
         playerY > rectY - playerRadius && playerY < rectY + rectHeight + playerRadius) {
         if (playerShards) {
             playerShards--;
-            systemHealth += 20;
-            playerScore += 25;
+            systemHealth = Math.min(systemHealth + 10, 250);
+            if (!isHackMode) playerScore += 25;
         }
     }
 }
@@ -402,7 +410,7 @@ function drawBlock(worldX, worldY) {
             buildings[idx] = [building[0], building[1], damagedBuilding[2]];
             return true;
         }
-       if (buildings[idx][2] <= 0) {
+        if (buildings[idx][2] <= 0) {
            blockBuildings.splice(idx, 1);
            if (idx === 0) blockData.shooter = [];
        }
@@ -428,7 +436,7 @@ function drawBlock(worldX, worldY) {
         if (checkIfKeyCollected(newKeyX, newKeyY)) {
             blockKeys = blockKeys.filter(([x, y]) => !(x === keyX && y === keyY));
             playerKeys++;
-            playerScore += 5;
+            if (!isHackMode) playerScore += 5;
         }
     });
 
@@ -438,8 +446,8 @@ function drawBlock(worldX, worldY) {
         healthY = worldY * blockHeight + blockData.health[1];
         if (checkIfHealthCollected(healthX, healthY)) {
             healthPack = [];
-            playerHealth += 10;
-            playerScore += 10;
+            playerHealth = Math.min(playerHealth + 10, 100);
+            if (!isHackMode) playerScore += 10;
         }
     }
 
@@ -450,7 +458,7 @@ function drawBlock(worldX, worldY) {
         if (checkIfInvisibilityCollected(invisibilityX, invisibilityY)) {
             invisibilityPack = [];
             isInvisible += 10;
-            playerScore += 10;
+            if (!isHackMode) playerScore += 10;
         }
     }
 
@@ -555,7 +563,7 @@ function drawShooter(worldX, worldY) {
         shooterAngle = (shooterAngle > Math.PI) ? shooterAngle - 2 * Math.PI : shooterAngle;
         playerAngle = (playerAngle > Math.PI) ? playerAngle - 2 * Math.PI : playerAngle;
         if (playerAngle > shooterAngle - shooterArc &&
-            playerAngle < shooterAngle + shooterArc && !isSafe) {
+            playerAngle < shooterAngle + shooterArc && !isSafe && !isHackMode) {
             playerHealth -= playerHealthDecrease;
             damage.style.opacity = '1';
         }
@@ -678,7 +686,7 @@ function drawBots() {
             bots = bots.filter(([botX, botY]) => !(botX === bot[0] && botY === bot[1]));
         }
 
-        if ((botRange + playerRadius) ** 2 > botDistanceFromPlayer && !isSafe && !isInvisible && !isEMPBlast) {
+        if ((botRange + playerRadius) ** 2 > botDistanceFromPlayer && !isSafe && !isInvisible && !isEMPBlast && !isHackMode) {
             playerHealth -= playerHealthDecrease * 2;
             damage.style.opacity = '1';
         }
@@ -700,12 +708,12 @@ function isBulletCollided(buildingX, buildingY, bulletX, bulletY, bulletAngle) {
     if (bulletRadius ** 2 >= distX ** 2 + distY ** 2) {
         if (Math.abs(distX) > Math.abs(distY)) {
             bulletX += ((distX >= 0) ? 1 : -1) * bulletSpeed
-            bulletX += ((distX === 0 && bulletAngle === 0) ? 2 : 0) * bulletSpeed
+            bulletX += ((distX === 0 && bulletAngle === 0) ? 2 : 0) * bulletSpeed * 1.25
             return ['X', bulletX, bulletY];
         }
         else {
             bulletY += ((distY > 0) ? -1 : 1) * bulletSpeed
-            bulletY += ((distY === 0 && bulletAngle === Math.PI / 2) ? -2 : 0) * bulletSpeed
+            bulletY += ((distY === 0 && bulletAngle === Math.PI / 2) ? -2 : 0) * bulletSpeed * 1.25
             return ['Y', bulletX, bulletY];
         }
     }
@@ -730,10 +738,25 @@ let globalPlayerX, globalPlayerY;
 // Track Keys Pressed
 window.addEventListener('keydown', (event) => {
     keysPressed[event.key.toLowerCase()] = true;
+    if (event.key === 'Shift') isShiftPressed = true;
 });
 window.addEventListener('keyup', (event) => {
     keysPressed[event.key.toLowerCase()] = false;
+    if (event.key === 'Shift') isShiftPressed = false;
 });
+
+function showPowers(startAngle) {
+    let endAngle = startAngle + Math.PI / 3.1;
+    ctx.beginPath();
+    ctx.moveTo(playerX + (playerRadius * Math.cos(startAngle) * 2.25), playerY + (playerRadius * Math.sin(startAngle) * 2.25));
+    ctx.arc(playerX, playerY, playerRadius * 5, startAngle, endAngle, false);
+    ctx.lineTo(playerX + (playerRadius * Math.cos(endAngle) * 2.25), playerY + (playerRadius * Math.sin(endAngle)) * 2.25);
+    ctx.arc(playerX, playerY, playerRadius * 2.3, endAngle, startAngle, true);
+    ctx.lineTo(playerX + (playerRadius * Math.cos(startAngle) * 2.25), playerY + (playerRadius * Math.sin(startAngle) * 2.25))
+    ctx.stroke();
+    ctx.fill();
+    ctx.closePath();
+}
 
 function playerMove() {
 
@@ -838,6 +861,17 @@ function playerMove() {
     ctx.stroke();
     ctx.fill();
     ctx.closePath();
+
+    if (isShiftPressed) {
+        ctx.strokeStyle = "rgba(0, 0, 0, 1)";
+        ctx.fillStyle = 'rgba(223, 223, 223, 0.8)';
+        showPowers(0)
+        showPowers(Math.PI / 3)
+        showPowers(2 * Math.PI / 3)
+        showPowers(Math.PI)
+        showPowers(4 * Math.PI / 3)
+        showPowers(5 * Math.PI / 3)
+    }
 }
 
 const cameraScale = 1.1;
@@ -847,6 +881,12 @@ let cameraY = blockHeight * 2 - (3 * blockHeight * (cameraScale - 1)) / 2;
 function checkGameOver() {
     if (playerHealth <= 0 || systemHealth <= 20) {
         closeMarket();
+        if (isInventory) {
+            inventory.style.opacity = '0';
+            inventory.style.pointerEvents = 'none';
+            inventory.style.transform = "scale(0)";
+            isInventory = false;
+        }
         result.style.opacity = '1';
         playerScore = Math.floor(playerScore);
         resultText.innerText = `GAME OVER\nPlayer Score : ${playerScore}`;
@@ -858,6 +898,7 @@ function checkGameOver() {
             localStorage.setItem('highScore', playerScore);
             highScore = playerScore;
         }
+        player.innerText = `Player Health : ${Math.ceil(playerHealth)}\nPlayer Score : ${Math.floor(playerScore)}\nHigh Score : ${highScore}`;
         return true;
     }
     return false;
@@ -874,6 +915,7 @@ function animate() {
     drawBots();
     playerMove();
 
+
     bullets.forEach((bullet, idx, bullets) => {
         bullet[2] %= 2 * Math.PI;
         bullet[2] = (bullet[2] < 0) ? bullet[2] + Math.PI * 2 : bullet[2];
@@ -885,7 +927,7 @@ function animate() {
                 renderedBuildings[index][2] -= ammoDamage;
                 damagedBuilding = renderedBuildings[index];
                 return true;
-            } if (collision[0] === 'X') {
+            } else if (collision[0] === 'X') {
                 bullet[2] = Math.PI - bullet[2];
                 bullet[3] -= 1;
                 renderedBuildings[index][2] -= ammoDamage;
@@ -901,10 +943,15 @@ function animate() {
 
     });
 
-    bullets.forEach(bullet => {
+    bullets.forEach((bullet, idx) => {
         [bulletX, bulletY] = bullet.slice(0, 2);
         newBulletX = (3 - globalX) * blockWidth + bulletX;
         newBulletY = (3 + globalY - Math.floor(bulletY / blockHeight)) * blockHeight + blockHeight - ((bulletY % blockHeight) + blockHeight) % blockHeight;
+
+        if (3 - globalX + Math.floor(bulletX / blockWidth) < 0 || 3 - globalX + Math.floor(bulletX / blockWidth) > 6 || 3 + globalY - Math.floor(bulletY / blockHeight) < 0 || 3 + globalY - Math.floor(bulletY / blockHeight) > 6) {
+            bullets.splice(idx, 1);
+            ammoCapacity++;
+        }
 
         ctx.beginPath();
         ctx.fillStyle = 'black';
@@ -955,6 +1002,12 @@ function animate() {
         ctx.closePath();
     }
 
+    owned.forEach((owns, idx) => {
+        if (inventoryItems[idx] < 10) owns.innerHTML = `OWNED : &nbsp&nbsp&nbsp${inventoryItems[idx]}&nbsp`
+        else owns.innerHTML = `OWNED : ${inventoryItems[idx]}&nbsp`
+    });
+
+
     details.innerText = `System Health : ${systemHealth}\nKeys : ${playerKeys}\nShards : ${playerShards}`;
     player.innerText = `Player Health : ${Math.ceil(playerHealth)}\nPlayer Score : ${Math.floor(playerScore)}\nHigh Score : ${highScore}`;
     checkGameOver();
@@ -985,11 +1038,11 @@ function closeMarket() {
 }
 
 requestAnimationFrame(animate);
-let decreaseTimer = 3000;
+let decreaseTimer = 5000;
 function decreaseHealth() {
-    if (systemHealth > 0 && isPlay && !isStart) {
-        systemHealth -= 2;
-        decreaseTimer = Math.max(1500, 3000 - 2 * timeElapsed);
+    if (systemHealth > 0 && isPlay && !isStart && !isHackMode) {
+        systemHealth -= 1;
+        decreaseTimer = Math.max(500, 5000 - 9 * timeElapsed);
     }
     setTimeout(decreaseHealth, decreaseTimer);
 }
@@ -997,7 +1050,7 @@ function decreaseHealth() {
 setTimeout(decreaseHealth, decreaseTimer);
 
 setInterval(() => {
-    if (isPlay && !isStart) {
+    if (isPlay && !isStart && !isHackMode) {
         playerScore += 0.5;
         timeElapsed += 1;
     }
@@ -1054,6 +1107,7 @@ setInterval(() => {
 let isEMPBlast = 0;
 let isMagnet = 0;
 let isTracking = 0;
+let isInventory = false;
 
 
 let distance, worldData, trackAngleCentral, trackAngleBase, nearestCentral, nearestBase;
@@ -1081,7 +1135,26 @@ function tracker() {
     }
 }
 
+let inventoryItems = [0, 0, 0, 0, 0, 0]
 function getItems(idx) {
+    if (isPlay && !isStart) {
+        if (idx < 4) {
+            inventoryItems[idx] += 1;
+        } else if (idx === 4) {
+            ammoCapacity += 5;
+            if (!isHackMode) {
+                itemPrices[4] += 10;
+            }
+        } else if (idx === 5) {
+            ammoDamage += 1;
+            if (!isHackMode) {
+                itemPrices[5] += 10;
+            }
+        }
+    }
+}
+
+function usePowerup(idx) {
     if (isPlay && !isStart) {
         if (idx === 0) {
             nearestCentral = [16 * blockWidth, 0, 0];
@@ -1094,15 +1167,8 @@ function getItems(idx) {
             isMagnet = 15;
         }
         else if (idx === 3) {
-           isEMPBlast = 25;
-           bots = [];
-        }
-        else if (idx === 4) {
-            ammoCapacity += 5;
-            itemPrices[4] += 10;
-        } else if (idx === 5) {
-            ammoDamage += 1;
-            itemPrices[5] += 20;
+            isEMPBlast = 25;
+            bots = [];
         }
     }
 }
@@ -1177,7 +1243,7 @@ function Restart() {
     isInvisible = 0;
     isMagnet = 0;
     isTracking = 0;
-    decreaseTimer = 1500;
+    decreaseTimer = 5000;
     timeElapsed = 0;
     botGenerateTimer = 8;
     playerLookAngle = 3 * Math.PI / 2
@@ -1189,14 +1255,29 @@ function Restart() {
     cameraX = blockWidth - (5 * blockWidth * (cameraScale - 1)) / 2;
     cameraY = blockHeight * 2 - (3 * blockHeight * (cameraScale - 1)) / 2;
     bots = [];
+    damagedBuilding = [];
+    ammoCapacity = 10;
+    ammoDamage = 1;
+    isInventory = false;
+    isShiftPressed = false;
+    inventoryItems = [0, 0, 0, 0, 0, 0]
+
+    if (!isHackMode) {
+        itemPrices = [3, 5, 7, 10, 10, 15, 0, 0]
+    } else {
+        itemPrices = [0, 0, 0, 0, 0, 0, 0, 0]
+    }
+
 }
 
 pause.addEventListener("click", () => {
     if (!isStart) Pause();
+    pause.blur();
 })
 
 resume.addEventListener("click", () => {
-    Resume()
+    Resume();
+    resume.blur();
 })
 
 // Shoot
@@ -1213,10 +1294,23 @@ window.addEventListener("keydown", (event) => {
             ammoCapacity--;
         }
     }
+    else if (event.key === "Escape" && !isPlay && !isStart && isPreferences) {
+        preferences.style.opacity = '0';
+        preferences.style.pointerEvents = 'none';
+        menuScreen.style.opacity = '1';
+        menuScreen.style.pointerEvents = 'auto';
+        isPreferences = false
+    }
     else if (event.key === 'Escape' && isPlay && !isStart) {
         Pause();
         if (isMarket) {
             closeMarket();
+        }
+        if (isInventory) {
+            inventory.style.opacity = '0';
+            inventory.style.pointerEvents = 'none';
+            inventory.style.transform = "scale(0)";
+            isInventory = false;
         }
     } else if (event.key === 'Escape' && !isStart && (parseInt(howToPlay.style.opacity))) {
         howToPlay.style.opacity = '0';
@@ -1236,7 +1330,7 @@ window.addEventListener("keydown", (event) => {
         result.style.pointerEvents = 'none';
         isPlay = true;
         requestAnimationFrame(animate);
-    } else if (event.key.toLowerCase() === 'm' && !isMarket && isSafe && !isStart && isPlay) {
+    } else if (event.key.toLowerCase() === 'm' && !isMarket && isSafe && !isStart && isPlay && !isInventory) {
         marketPlace.style.opacity = '1';
         marketPlace.style.width = '70vw';
         marketPlace.style.height = '70vh';
@@ -1251,8 +1345,40 @@ window.addEventListener("keydown", (event) => {
         isMarket = true;
     } else if (event.key.toLowerCase() === 'm' && isMarket) {
         closeMarket();
+    } else if (event.key.toLowerCase() === 'i' && !isInventory && !isMarket && isPlay && !isStart) {
+        inventory.style.opacity = '1';
+        inventory.style.pointerEvents = 'auto';
+        inventory.style.transform = 'scale(1)'
+        isInventory = true;
+    } else if (event.key.toLowerCase() === 'i' && isInventory) {
+        inventory.style.opacity = '0';
+        inventory.style.pointerEvents = 'none';
+        inventory.style.transform = "scale(0)";
+        isInventory = false;
+    }
+
+    if (isShiftPressed) {
+        let invPower = -1;
+        if (event.key === "!") invPower = 0
+        else if (event.key === "@") invPower = 1
+        else if (event.key === "#") invPower = 2
+        else if (event.key === "$") invPower = 3
+        if (invPower !== -1 && inventoryItems[invPower] > 0) {
+            inventoryItems[invPower] -= 1;
+            usePowerup(invPower);
+        }
     }
 })
+
+use.forEach((use, idx) => {
+    use.addEventListener('click', () => {
+        if (inventoryItems[idx]) {
+            inventoryItems[idx] -= 1;
+            usePowerup(idx);
+        }
+        use.blur();
+    })
+});
 
 mainMenu.addEventListener("click", () => {
     if (!isPlay) {
@@ -1264,6 +1390,7 @@ mainMenu.addEventListener("click", () => {
         menuScreen.style.pointerEvents = 'none';
         isRestart = false;
     }
+    mainMenu.blur();
 })
 
 instructions.addEventListener("click", () => {
@@ -1271,12 +1398,14 @@ instructions.addEventListener("click", () => {
     howToPlay.style.pointerEvents = 'auto';
     menuScreen.style.opacity = '0';
     menuScreen.style.pointerEvents = 'none';
+    instructions.blur();
 })
 
 start.addEventListener("click", () => {
     isStart = false;
     home.style.opacity = '0';
     home.style.pointerEvents = 'none';
+    start.blur();
 })
 restart.addEventListener("click", () => {
     sure.innerText = "Are you sure you want to Restart?"
@@ -1286,6 +1415,7 @@ restart.addEventListener("click", () => {
     menuScreen.style.opacity = '0.5';
     menuScreen.style.pointerEvents = 'none';
     isRestart = true;
+    restart.blur();
 })
 retry.addEventListener("click", () => {
     Restart();
@@ -1293,9 +1423,26 @@ retry.addEventListener("click", () => {
     result.style.pointerEvents = 'none';
     isPlay = true;
     requestAnimationFrame(animate);
+    retry.blur();
 })
 
 yes.addEventListener("click", () => {
+    if (isHack && isRestart && !isHackMode) {
+        hackMode.innerText = "DEACTIVATE HACK MODE";
+        hackMode.style.width = '70%';
+        hackMode.style.left = "15%";
+        isHackMode = true;
+        isHack = false;
+        preferences.style.opacity = '0';
+    } else if (isHack && isRestart) {
+        hackMode.innerText = "INITIATE HACK MODE";
+        hackMode.style.width = '60%';
+        hackMode.style.left = "20%";
+        isHackMode = false;
+        isHack = false;
+        preferences.style.opacity = '0';
+    }
+
     if (isRestart) {
         Restart();
         confirmation.style.pointerEvents = 'none';
@@ -1319,14 +1466,84 @@ yes.addEventListener("click", () => {
         Restart();
         requestAnimationFrame(animate);
     }
+
+    if (isReset) {
+        localStorage.setItem('highScore', '0');
+        highScore = 0;
+        player.innerText = `Player Health : ${Math.ceil(playerHealth)}\nPlayer Score : ${Math.floor(playerScore)}\nHigh Score : ${highScore}`;
+        confirmation.style.pointerEvents = 'none';
+        confirmation.style.opacity = '0';
+        confirmation.style.zIndex = '0';
+        preferences.style.opacity = '1';
+        preferences.style.pointerEvents = 'auto';
+        isReset = false;
+    }
+
+    yes.blur();
 })
 
 no.addEventListener("click", () => {
-    confirmation.style.pointerEvents = 'none';
-    confirmation.style.opacity = '0';
-    confirmation.style.zIndex = '0';
-    menuScreen.style.opacity = '1';
-    menuScreen.style.pointerEvents = 'auto';
-    isPlay = false;
-    isRestart = null;
+    if (isReset && !isHack) {
+        confirmation.style.pointerEvents = 'none';
+        confirmation.style.opacity = '0';
+        confirmation.style.zIndex = '0';
+        preferences.style.opacity = '1';
+        preferences.style.pointerEvents = 'auto';
+    } else if (!isHack) {
+        confirmation.style.pointerEvents = 'none';
+        confirmation.style.opacity = '0';
+        confirmation.style.zIndex = '0';
+        menuScreen.style.opacity = '1';
+        menuScreen.style.pointerEvents = 'auto';
+        isPlay = false;
+        isRestart = null;
+        isReset = false;
+        no.blur();
+    }
+
+    else if (isHack && isRestart) {
+        isHack = false;
+        confirmation.style.pointerEvents = 'none';
+        confirmation.style.opacity = '0';
+        confirmation.style.zIndex = '0';
+        preferences.style.opacity = '1';
+        preferences.style.pointerEvents = 'auto';
+    }
 });
+
+let isPreferences = false;
+prefs.addEventListener("click", () => {
+    preferences.style.opacity = '1';
+    preferences.style.pointerEvents = 'auto';
+    menuScreen.style.opacity = '0.5';
+    menuScreen.style.pointerEvents = 'none';
+    isPreferences = true;
+    prefs.blur();
+})
+
+let isReset = false;
+resetScore.addEventListener("click", () => {
+    sure.innerText = "Are you sure you want to Reset your Score?";
+    sure.style.fontSize = '1.4rem';
+    confirmation.style.pointerEvents = 'auto';
+    confirmation.style.opacity = '1';
+    confirmation.style.zIndex = '6';
+    preferences.style.opacity = '0.5';
+    preferences.style.pointerEvents = 'none';
+    resetScore.blur();
+    isReset = true;
+})
+
+let isHackMode = false;
+let isHack = null;
+hackMode.addEventListener("click", () => {
+    sure.innerText = "Are you sure you want to Restart?"
+    confirmation.style.pointerEvents = 'auto';
+    confirmation.style.opacity = '1';
+    confirmation.style.zIndex = '6';
+    preferences.style.opacity = '0.5';
+    preferences.style.pointerEvents = 'none';
+    isRestart = true;
+    isHack = true;
+    hackMode.blur();
+})

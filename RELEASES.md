@@ -56,3 +56,9 @@
 * Fixed Look Angle Bug
 * Fixed Other Bugs
 * Bugs Known: Sometimes while Bouncing, it will start repeatedly bouncing with that building.
+
+# v2.1
+* Added Inventory to use Items anytime
+* Using "Shift" + '1', '2', '3', '4' uses first 4 Powerups
+* Added Preferences but Music doesn't work.
+* Preferences Hack Mode and Reset Score.
