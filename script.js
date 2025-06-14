@@ -32,7 +32,7 @@ const marketPlace = document.querySelector("#marketPlace");
 const message = document.querySelector("#message");
 const items = document.querySelectorAll(".items");
 let itemButton, itemButtonText;
-let itemPrices = [3, 5, 7, 8, 10, 15, 15, 15];
+let itemPrices = [3, 5, 7, 10, 10, 15, 15, 20];
 const instructions = document.querySelector("#instructions");
 const howToPlay = document.querySelector("#howToPlay");
 const confirmation = document.querySelector("#confirmation");
@@ -375,7 +375,7 @@ function shardsToHealth(rectX, rectY) {
         playerY > rectY - playerRadius && playerY < rectY + rectHeight + playerRadius) {
         if (playerShards && systemHealth < 250) {
             playerShards--;
-            systemHealth = Math.min(systemHealth + 10, 250);
+            systemHealth = Math.min(systemHealth + Math.max(10 - timeElapsed / 200, 4), 250);
             if (!isHackMode) playerScore += 15;
         };
     }
@@ -1174,7 +1174,7 @@ let decreaseTimer = 4000;
 function decreaseHealth() {
     if (systemHealth > 0 && isPlay && !isStart && !isHackMode) {
         systemHealth -= 1;
-        decreaseTimer = Math.max(500, 4000 - 8 * timeElapsed);
+        decreaseTimer = Math.max(400, 4000 - 3 * timeElapsed);
     }
     setTimeout(decreaseHealth, decreaseTimer);
 }
@@ -1202,7 +1202,7 @@ setInterval(() => {
     }
     dataMines.forEach((mine, idx) => {
         dataMines[idx][5] += 1;
-        if (dataMines[idx][5] === Math.max(15 - dataMines[idx][4], 8)) {
+        if (dataMines[idx][5] === Math.max(25 - dataMines[idx][4], 15)) {
             dataMines[idx][4]++;
             dataMines[idx][5] = 0;
             if (Math.random() < 0.5) dataRandom = Math.random() * 0.5 - 2

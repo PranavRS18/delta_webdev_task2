@@ -99,3 +99,10 @@
 * Increased (Increase Ammo and Firepower) Costs
 * Each time, A Purchase in Data Mine or Teleportation Pod Jumps its price by 5 capping at 40.
 * System Health now decreases a little bit faster at the End.
+
+### v2.4.4
+* Made Data Mines more Passive
+* System Health now follows a different decrease pattern.
+* Reverted Teleportation Pods to Original Price
+* Reverted EMP Blast to Original Price
+* More Shards are needed over time to increase System Health
