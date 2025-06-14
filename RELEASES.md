@@ -88,3 +88,9 @@
 
 ### v2.4.1
 * Added Arrow Keys for movement.
+
+### v2.4.2
+* Nerfed Key Magnet
+* Base Station won't take excess shards
+* Large Health Pack won't be consumed at full Health.
+* Reduced Key Magnet and EMP Blast prices to 7 and 8 respectively.

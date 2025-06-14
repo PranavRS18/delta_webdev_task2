@@ -32,7 +32,7 @@ const marketPlace = document.querySelector("#marketPlace");
 const message = document.querySelector("#message");
 const items = document.querySelectorAll(".items");
 let itemButton, itemButtonText;
-let itemPrices = [3, 5, 7, 10, 10, 15, 15, 20];
+let itemPrices = [3, 5, 7, 8, 10, 15, 15, 20];
 const instructions = document.querySelector("#instructions");
 const howToPlay = document.querySelector("#howToPlay");
 const confirmation = document.querySelector("#confirmation");
@@ -373,11 +373,11 @@ function createShards(rectX, rectY) {
 function shardsToHealth(rectX, rectY) {
     if (playerX > rectX - playerRadius && playerX < rectX + rectWidth + playerRadius &&
         playerY > rectY - playerRadius && playerY < rectY + rectHeight + playerRadius) {
-        if (playerShards) {
+        if (playerShards && systemHealth < 250) {
             playerShards--;
             systemHealth = Math.min(systemHealth + 10, 250);
             if (!isHackMode) playerScore += 25;
-        }
+        };
     }
 }
 
@@ -454,7 +454,7 @@ function drawBlock(worldX, worldY) {
         newKeyY = worldY * blockHeight + keyY;
 
         if (isMagnet) {
-            if ((playerX - newKeyX) ** 2 + (playerY - newKeyY) ** 2 < (0.75 * blockWidth) ** 2) {
+            if ((playerX - newKeyX) ** 2 + (playerY - newKeyY) ** 2 < (0.3 * blockWidth) ** 2) {
                 blockKeys = blockKeys.filter(([x, y]) => !(x === keyX && y === keyY));
                 newKeyX += Math.cos(Math.atan2(playerY - newKeyY, playerX - newKeyX)) * magnetSpeed;
                 newKeyY += Math.sin(Math.atan2(playerY - newKeyY, playerX - newKeyX)) * magnetSpeed;
@@ -1286,9 +1286,12 @@ function usePowerup(idx) {
             nearestBase = [32 * blockWidth, 0, 0];
             isTracking = 60;
         }
-        else if (idx === 1) {
-            playerHealth += 20;
-        } else if (idx === 2) {
+        else if (idx === 1 && playerHealth < 100) {
+            playerHealth = Math.min(playerHealth + 20, 100);
+        } else if (idx === 1) {
+            inventoryItems[1]++;
+        }
+        else if (idx === 2) {
             isMagnet = 15;
         }
         else if (idx === 3) {
