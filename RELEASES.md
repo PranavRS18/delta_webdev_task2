@@ -85,3 +85,6 @@
 * Added Bullet and Bot Interaction
 * Added Minimum Extra 1 Key in each Block.
 * Made a Mobile Warning since this game is not mobile responsive
+
+### v2.4.1
+* Added Arrow Keys for movement.

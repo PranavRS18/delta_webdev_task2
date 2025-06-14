@@ -816,35 +816,35 @@ function playerMove() {
 
         // Player +X
         if (!isCollidedRX) {
-            if (keysPressed['a']) {
+            if (keysPressed['a'] || keysPressed['arrowleft']) {
                 playerLookAngle = (playerLookAngle < 0) ? playerLookAngle + 2 * Math.PI : playerLookAngle;
                 playerX -= playerSpeed;
                 playerLookAngle -= Math.sin((playerLookAngle - Math.PI) / 2) * playerLookAngleSpeed;
                 if (playerX > initialPlayerX + blockWidth * 3 / 4 || playerX < initialPlayerX - blockWidth * 3 / 4) {
-                    cameraX -= playerSpeed;
+                    if (keysPressed['a'] || keysPressed['arrowleft']) cameraX -= playerSpeed;
                 }
             }
         }
         // Player -X
         if (!isCollidedLX) {
-            if (keysPressed['d']) {
+            if (keysPressed['d'] || keysPressed['arrowright']) {
                 playerLookAngle = (playerLookAngle < Math.PI) ? playerLookAngle + 2 * Math.PI : playerLookAngle;
                 playerX += playerSpeed;
                 playerLookAngle -= Math.sin(playerLookAngle / 2 - Math.PI) * playerLookAngleSpeed;
                 if (playerX > initialPlayerX + blockWidth * 3 / 4 || playerX < initialPlayerX - blockWidth * 3 / 4) {
-                    if (keysPressed['d']) cameraX += playerSpeed;
+                    if (keysPressed['d'] || keysPressed['arrowright']) cameraX += playerSpeed;
                 }
             }
         }
 
         // Player +Y
         if (!isCollidedUY) {
-            if (keysPressed['w']) {
+            if (keysPressed['w'] || keysPressed['arrowup']) {
                 playerLookAngle = (playerLookAngle < Math.PI / 2) ? playerLookAngle + 2 * Math.PI : playerLookAngle;
                 playerY -= playerSpeed;
                 playerLookAngle -= Math.sin((playerLookAngle - 3 * Math.PI / 2) / 2) * playerLookAngleSpeed;
                 if (playerY > initialPlayerY + blockHeight * 3 / 4 || playerY < initialPlayerY - blockHeight * 3 / 4) {
-                    if (keysPressed['w']) cameraY -= playerSpeed;
+                    if (keysPressed['w'] || keysPressed['arrowup']) cameraY -= playerSpeed;
                 }
             }
         }
@@ -852,12 +852,12 @@ function playerMove() {
 
         // Camera
         if (!isCollidedDY) {
-            if (keysPressed['s']) {
+            if (keysPressed['s'] || keysPressed['arrowdown']) {
                 playerLookAngle = (playerLookAngle <  3 * Math.PI / 2) ? playerLookAngle + 2 * Math.PI : playerLookAngle;
                 playerY += playerSpeed;
                 playerLookAngle -= Math.sin((playerLookAngle - 5 * Math.PI / 2) / 2) * playerLookAngleSpeed;
                 if (playerY > initialPlayerY + blockHeight * 3 / 4 || playerY < initialPlayerY - blockHeight * 3 / 4) {
-                    if (keysPressed['s']) cameraY += playerSpeed;
+                    if (keysPressed['s'] || keysPressed['arrowdown']) cameraY += playerSpeed;
                 }
             }
         }

@@ -6,7 +6,7 @@ You are **Edward Xyrek**, One of the Last Survivors of Cyberia.
 
 ## CONTROLS
 
-- **Move**: `W`, `A`, `S`, `D`
+- **Move**: `W`, `A`, `S`, `D` or `Arrow Keys`
 - **Rotate Look Direction**: `Q` (⟲), `E` (⟳)
 - **Shoot**: `Spacebar`
 - **Marketplace**: `M` (inside Safe Zones)
