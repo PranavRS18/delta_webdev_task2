@@ -32,7 +32,7 @@ const marketPlace = document.querySelector("#marketPlace");
 const message = document.querySelector("#message");
 const items = document.querySelectorAll(".items");
 let itemButton, itemButtonText;
-let itemPrices = [3, 5, 7, 8, 10, 15, 15, 20];
+let itemPrices = [3, 5, 7, 8, 10, 15, 15, 15];
 const instructions = document.querySelector("#instructions");
 const howToPlay = document.querySelector("#howToPlay");
 const confirmation = document.querySelector("#confirmation");
@@ -365,7 +365,7 @@ function createShards(rectX, rectY) {
         if (keysToShards <= playerKeys) {
             playerKeys -= keysToShards;
             playerShards++;
-            if (!isHackMode) playerScore += 20;
+            if (!isHackMode) playerScore += 10;
         }
     }
 }
@@ -376,7 +376,7 @@ function shardsToHealth(rectX, rectY) {
         if (playerShards && systemHealth < 250) {
             playerShards--;
             systemHealth = Math.min(systemHealth + 10, 250);
-            if (!isHackMode) playerScore += 25;
+            if (!isHackMode) playerScore += 15;
         };
     }
 }
@@ -467,7 +467,7 @@ function drawBlock(worldX, worldY) {
         if (checkIfKeyCollected(newKeyX, newKeyY)) {
             blockKeys = blockKeys.filter(([x, y]) => !(x === keyX && y === keyY));
             playerKeys++;
-            if (!isHackMode) playerScore += 5;
+            if (!isHackMode) playerScore += 2;
         }
     });
 
@@ -478,7 +478,6 @@ function drawBlock(worldX, worldY) {
         if (checkIfHealthCollected(healthX, healthY)) {
             healthPack = [];
             playerHealth = Math.min(playerHealth + 10, 100);
-            if (!isHackMode) playerScore += 10;
         }
     }
 
@@ -489,7 +488,6 @@ function drawBlock(worldX, worldY) {
         if (checkIfInvisibilityCollected(invisibilityX, invisibilityY)) {
             invisibilityPack = [];
             isInvisible += 10;
-            if (!isHackMode) playerScore += 10;
         }
     }
 
@@ -1079,7 +1077,7 @@ function animate() {
 
     items.forEach((item, idx, items) => {
         itemButton = Array.from(item.children).reverse()[0];
-        if (idx === 4 && ammoCapacity === 20) {
+        if (idx === 4 && ammoCapacity === 15) {
             itemButtonText = "MAXED AMMO";
         }
         else if (idx === 5 && ammoDamage === 3) {
@@ -1176,7 +1174,7 @@ let decreaseTimer = 4000;
 function decreaseHealth() {
     if (systemHealth > 0 && isPlay && !isStart && !isHackMode) {
         systemHealth -= 1;
-        decreaseTimer = Math.max(750, 4000 - 9 * timeElapsed);
+        decreaseTimer = Math.max(500, 4000 - 8 * timeElapsed);
     }
     setTimeout(decreaseHealth, decreaseTimer);
 }
@@ -1266,15 +1264,16 @@ function getItems(idx) {
         } else if (idx === 4) {
             ammoCapacity += 5;
             if (!isHackMode) {
-                itemPrices[4] += 10;
+                itemPrices[4] += 20;
             }
         } else if (idx === 5) {
             ammoDamage += 1;
             if (!isHackMode) {
-                itemPrices[5] += 10;
+                itemPrices[5] += 20;
             }
         } else if (idx > 5) {
             inventoryItems[idx - 2] += 1;
+            itemPrices[idx] = Math.min(itemPrices[idx] + 5, 40)
         }
     }
 }
@@ -1338,7 +1337,7 @@ setInterval(() => {
 items.forEach((item, idx) => {
     itemButton = Array.from(item.children).reverse()[0];
     itemButton.addEventListener('click', () => {
-        if (idx === 4 && ammoCapacity === 20) {}
+        if (idx === 4 && ammoCapacity === 15) {}
         else if (idx === 5 && ammoDamage === 3) {}
         else if (playerShards >= itemPrices[idx]) {
             playerShards -= itemPrices[idx];

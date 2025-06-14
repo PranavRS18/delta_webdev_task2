@@ -94,3 +94,8 @@
 * Base Station won't take excess shards
 * Large Health Pack won't be consumed at full Health.
 * Reduced Key Magnet and EMP Blast prices to 7 and 8 respectively.
+
+### v2.4.3
+* Increased (Increase Ammo and Firepower) Costs
+* Each time, A Purchase in Data Mine or Teleportation Pod Jumps its price by 5 capping at 40.
+* System Health now decreases a little bit faster at the End.
