@@ -70,3 +70,6 @@
 # v2.3
 * Added Teleportation Pods
 * Added "Shift" + "X" uses Data Mines
+
+# v2.3.1
+* Testing Mode of 100 Shards was applied but forgot to remove.
