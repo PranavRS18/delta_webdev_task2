@@ -398,3 +398,18 @@ button:hover {
     width: 50%;
     left: 25%;
 }
+
+#mobile-warning {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(15, 15, 15);
+    color: #80FFFF;
+    font-size: 5rem;
+    text-align: center;
+    padding-top: 40vh;
+    z-index: 10;
+}

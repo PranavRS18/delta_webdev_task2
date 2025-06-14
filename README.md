@@ -2,12 +2,15 @@
 
 Cyberia, once a megacity powered by the AI AUREX (Autonomous Unified Resource Extraction eXecutive), is now on the verge of collapse. As a last operative of the Resistance, your mission is to stabilize outposts, collect vital resources, and delay the total collapse of civilization — all while surviving hostile bots and an unstable AI watching your every move.
 
+You are **Edward Xyrek**, One of the Last Survivors of Cyberia.
+
 ## CONTROLS
 
 - **Move**: `W`, `A`, `S`, `D`
 - **Rotate Look Direction**: `Q` (⟲), `E` (⟳)
 - **Shoot**: `Spacebar`
 - **Marketplace**: `M` (inside Safe Zones)
+- **Inventory**: `I`
 
 ## OBJECTIVES
 
@@ -25,14 +28,14 @@ Cyberia, once a megacity powered by the AI AUREX (Autonomous Unified Resource Ex
 
 ## MARKETPLACE (Safe Zones Only)
 
-- **Ultimate Tracker** – Reveals Hubs & Bases for 60s.
+- **Ultimate Tracker** – Reveals Hubs & Bases for 30s.
 - **Large Health Pack** – +20 HP.
 - **Key Magnet** – Pulls in nearby keys.
-- **EMP Blast** – Stuns nearby bots & shooters.
+- **EMP Blast** – Stuns nearby bots & shooters for 25s.
 - **Increase Ammo Capacity** – More shots per load.
 - **Upgrade Firearm** – Boosts bullet damage.
 - **Data Mine** – Slowly generates shards passively.
-- **Teleportation Pods** – Place two; travel instantly.
+- **Teleportation Pods** – Travel instantly between all your pods.
 
 ## WORLD FEATURES
 
@@ -44,7 +47,7 @@ Cyberia, once a megacity powered by the AI AUREX (Autonomous Unified Resource Ex
 
 - **Buildings** – Block movement.
 - **Rotating Shooters** – Dangerous sentries.
-- **Bot Factories** – Constantly spawn enemies.
+- **Bot Factories** – Constantly spawns enemies.
 
 ## POWER-UPS
 
@@ -75,12 +78,9 @@ Added a Preferences screen accessible from the title or pause menu. Includes:
 - **Reset Score**: Wipe your current high score and progress to start fresh.
 - (Note: Music toggle is present but not functional yet.)
 
-## SURVIVAL TIPS
 
-- Regularly deposit keys to reduce risk.
-- Use Safe Zones to rest, upgrade, and plan.
-- Avoid tight spaces near shooters.
-- Time invisibility for infiltration or escape.
-- Every shard counts — spend wisely.
-- Keep moving. Stillness is death.
-- Teleportation Pods are Legendary Items.
+## Technologies Used
+* HTML5
+* CSS
+* JavaScript (ES6)
+* Canvas API

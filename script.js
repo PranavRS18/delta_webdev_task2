@@ -115,7 +115,7 @@ const magnetSpeed = 0.3 * remInPx;
 
 function createKeys() {
     // Keys
-    nKeys = 2 + Math.floor(Math.random() * 4);
+    nKeys = 3 + Math.floor(Math.random() * 4);
     keys = []
 
     for (let key = 0; key < nKeys; key++) {
@@ -128,8 +128,8 @@ function createKeys() {
 
 const chunksVisited = new Set();
 chunksVisited.add('0, 0');
-let chunkSize = 7;
-let chunkX, chunkY, minChunkX, minChunkY, maxChunkX, maxChunkY, shuffledBlockType, shuffledBlockTypes, paddingBlock;
+let chunkSize = 11;
+let chunkX, chunkY, minChunkX, minChunkY, maxChunkX, maxChunkY, shuffledBlockType, shuffledBlockTypes, paddingBlock, blockType;
 
 const blockTypes = ['central', 'base', 'safe', 'factory']
 const global = new Map();
@@ -139,7 +139,7 @@ let globalXChange = '0';
 let bots = [];
 const botFactories = new Map();
 let botGenerateTimer = 8;
-const botRadius = buildingWidth / 8;
+const botRadius = buildingWidth / 7;
 const botRange = buildingWidth * 1.25;
 const botSpeed = 0.075 * remInPx;
 let lastBotProduced, moves, move, botDistanceFromPlayer;
@@ -154,6 +154,50 @@ let invisibilityX, invisibilityY, invisibilityPack;
 let isInvisible = 0;
 
 const baseChunkBorder = Math.floor(chunkSize / 2);
+
+
+function createBlock(globalX, globalY) {
+
+    // Buildings
+    nBuildings = 2 + Math.floor(Math.random() * 2);
+    buildings = []
+    for (let building = 0; building < nBuildings; building++) {
+        buildingX = rectX + Math.random() * (rectWidth - buildingWidth);
+        buildingY = rectY + Math.random() * (rectHeight - buildingHeight);
+        buildings.push([buildingX, buildingY, initialBuildingHealth]);
+    }
+
+    // Shooter
+    shooterBuilding = buildings[0];
+    shooterX = shooterBuilding[0] + shooterRadius + Math.random() * (buildingWidth - 2 * shooterRadius);
+    shooterY = shooterBuilding[1] + shooterRadius + Math.random() * (buildingHeight - 2 * shooterRadius);
+
+    if (globalXChange === '+') shooterAngle = (shooterArc + 3 * Math.PI / 2) + Math.random() * (Math.PI - 2 * shooterArc);
+    else if (globalXChange === '-') shooterAngle = (shooterArc + Math.PI / 2) + Math.random() * (Math.PI - 2 * shooterArc);
+    else shooterAngle = Math.PI * 2 * Math.random();
+
+    if (Math.random() < 0.95) {
+        blockType = "regular";
+    } else {
+        botFactories.set(`${globalX}, ${globalY}`, botGenerateTimer)
+        blockType = "factory";
+        buildings = [];
+        shooterX = 0;
+        shooterY = 0;
+        shooterAngle = 0;
+    }
+
+    global.set(`${globalX}, ${globalY}`, {
+        type: blockType,
+        buildings: buildings,
+        shooter: [shooterX, shooterY, shooterAngle],
+        keys: createKeys(),
+        health: (Math.random() < healthPackChance) ? [Math.random() * blockWidth, Math.random() * blockHeight] : [],
+        invisibility: (Math.random() < invisibilityPackChance) ? [Math.random() * blockWidth, Math.random() * blockHeight] : []
+    });
+
+}
+
 function createBaseChunk() {
     shuffledBlockTypes = shuffleArray(blockTypes);
     for (let block = 0; block < shuffledBlockTypes.length; block++) {
@@ -199,6 +243,14 @@ function createBaseChunk() {
             invisibility : (Math.random() < invisibilityPackChance) ? [Math.random() * blockWidth, Math.random() * blockHeight] : []
         });
     }
+
+    for (let blockX = -1 * Math.floor(chunkSize / 2); blockX < Math.floor(chunkSize / 2) + 1; blockX++) {
+        for (let blockY = -1 * Math.floor(chunkSize / 2); blockY < Math.floor(chunkSize / 2) + 1; blockY++) {
+            if (!global.has(`${blockX}, ${blockY}`)) {
+                createBlock(blockX, blockY);
+            }
+        }
+    }
 }
 
 createBaseChunk();
@@ -224,7 +276,7 @@ function createChunk(chunkX, chunkY) {
             paddingBlock = 0;
         }
         else {
-            paddingBlock = 1;
+            paddingBlock = 2;
         }
 
         if (block === 0) {
@@ -257,36 +309,13 @@ function createChunk(chunkX, chunkY) {
     }
     chunksVisited.add(`${chunkX}, ${chunkY}`)
 
-}
-
-function createBlock(globalX, globalY) {
-
-    // Buildings
-    nBuildings = 2 + Math.floor(Math.random() * 2);
-    buildings = []
-    for (let building = 0; building < nBuildings; building++) {
-        buildingX = rectX + Math.random() * (rectWidth - buildingWidth);
-        buildingY = rectY + Math.random() * (rectHeight - buildingHeight);
-        buildings.push([buildingX, buildingY, initialBuildingHealth]);
+    for (let blockX = -1 * Math.floor(chunkSize / 2) + (chunkX * chunkSize); blockX < Math.floor(chunkSize / 2) + (chunkX * chunkSize) + 1; blockX++) {
+        for (let blockY = -1 * Math.floor(chunkSize / 2)+ (chunkY * chunkSize); blockY < Math.floor(chunkSize / 2) + (chunkY * chunkSize) + 1; blockY++) {
+            if (!global.has(`${blockX}, ${blockY}`)) {
+                createBlock(blockX, blockY);
+            }
+        }
     }
-
-    // Shooter
-    shooterBuilding = buildings[0];
-    shooterX = shooterBuilding[0] + shooterRadius + Math.random() * (buildingWidth - 2 * shooterRadius);
-    shooterY = shooterBuilding[1] + shooterRadius + Math.random() * (buildingHeight - 2 * shooterRadius);
-
-    if (globalXChange === '+') shooterAngle = (shooterArc + 3 * Math.PI / 2) + Math.random() * (Math.PI - 2 * shooterArc);
-    else if (globalXChange === '-') shooterAngle = (shooterArc + Math.PI / 2) + Math.random() * (Math.PI - 2 * shooterArc);
-    else shooterAngle = Math.PI * 2 * Math.random();
-
-    global.set(`${globalX}, ${globalY}`, {
-        type : 'regular',
-        buildings : buildings,
-        shooter: [shooterX, shooterY, shooterAngle],
-        keys : createKeys(),
-        health : (Math.random() < healthPackChance) ? [Math.random() * blockWidth, Math.random() * blockHeight] : [],
-        invisibility : (Math.random() < invisibilityPackChance) ? [Math.random() * blockWidth, Math.random() * blockHeight] : []
-    });
 
 }
 
@@ -372,10 +401,6 @@ function drawBlock(worldX, worldY) {
         globalPlayerY = globalBlockY;
     }
 
-    if (!global.has(`${globalBlockX}, ${globalBlockY}`)) {
-        createBlock(globalBlockX, globalBlockY);
-    }
-
     blockData = global.get(`${globalBlockX}, ${globalBlockY}`);
 
     if (blockData.type === 'regular') {
@@ -429,7 +454,7 @@ function drawBlock(worldX, worldY) {
         newKeyY = worldY * blockHeight + keyY;
 
         if (isMagnet) {
-            if ((playerX - newKeyX) ** 2 + (playerY - newKeyY) ** 2 < (0.5 * blockWidth) ** 2) {
+            if ((playerX - newKeyX) ** 2 + (playerY - newKeyY) ** 2 < (0.75 * blockWidth) ** 2) {
                 blockKeys = blockKeys.filter(([x, y]) => !(x === keyX && y === keyY));
                 newKeyX += Math.cos(Math.atan2(playerY - newKeyY, playerX - newKeyX)) * magnetSpeed;
                 newKeyY += Math.sin(Math.atan2(playerY - newKeyY, playerX - newKeyX)) * magnetSpeed;
@@ -621,8 +646,8 @@ function drawCity() {
         globalY++;
     }
 
-    chunkX = Math.floor((globalX + 4) / chunkSize);
-    chunkY = Math.floor((globalY + 4) / chunkSize);
+    chunkX = Math.floor((globalX + 6) / chunkSize);
+    chunkY = Math.floor((globalY + 6) / chunkSize);
 
     for (let X = -1; X < 2; X++){
         for (let Y = -1; Y < 2; Y++){
@@ -631,6 +656,7 @@ function drawCity() {
             }
         }
     }
+
 
     // Draw City
     for (let col = 0; col < nColumns; col++) {
@@ -999,6 +1025,7 @@ function animate() {
     bullets.forEach((bullet, idx, bullets) => {
         bullet[2] %= 2 * Math.PI;
         bullet[2] = (bullet[2] < 0) ? bullet[2] + Math.PI * 2 : bullet[2];
+
         renderedBuildings.some((building, index) => {
             collision = isBulletCollided(building[0], building[1], bullet[0], bullet[1], bullet[2])
             if (collision[0] === 'Y') {
@@ -1015,6 +1042,7 @@ function animate() {
                 return true;
             }
         });
+
         if (!bullet[3]) {
             bullets.splice(idx, 1);
             ammoCapacity++;
@@ -1027,6 +1055,15 @@ function animate() {
         [bulletX, bulletY] = bullet.slice(0, 2);
         newBulletX = (3 - globalX) * blockWidth + bulletX;
         newBulletY = (3 + globalY - Math.floor(bulletY / blockHeight)) * blockHeight + blockHeight - ((bulletY % blockHeight) + blockHeight) % blockHeight;
+
+        for (let i = bots.length - 1; i >= 0; i--) {
+            if ((botRadius + bulletRadius) ** 2 >
+                (bots[i][0] + (3 - globalX) * blockWidth - newBulletX) ** 2 + ((3 + globalY) * blockHeight - bots[i][1] - newBulletY) ** 2) {
+                bots.splice(i, 1);
+                bullet[3] = 0;
+                break;
+            }
+        }
 
         if (3 - globalX + Math.floor(bulletX / blockWidth) < 0 || 3 - globalX + Math.floor(bulletX / blockWidth) > 6 || 3 + globalY - Math.floor(bulletY / blockHeight) < 0 || 3 + globalY - Math.floor(bulletY / blockHeight) > 6) {
             bullets.splice(idx, 1);
@@ -1057,7 +1094,25 @@ function animate() {
     });
 
     if (isTracking) {
-        requestAnimationFrame(tracker);
+
+        nearestCentral = [32 * blockWidth, 0, 0];
+        nearestBase = [32 * blockWidth, 0, 0];
+        for (let column = -nColumns; column < nColumns * 2; column++) {
+            for (let row = -nRows; row < nRows * 2; row++) {
+                worldData = global.get(`${globalX + column - 3}, ${globalY - row + 3}`)
+                distance = Math.sqrt((column * blockWidth - playerX) ** 2 + (row * blockHeight - playerY) ** 2)
+                if (worldData.type === 'central' && distance < nearestCentral[0]) {
+                    nearestCentral[0] = distance;
+                    nearestCentral[1] = globalX + column - 3;
+                    nearestCentral[2] = globalY - row + 3;
+                } else if (worldData.type === 'base' && distance < nearestBase[0]) {
+                    nearestBase[0] = distance;
+                    nearestBase[1] = globalX + column - 3;
+                    nearestBase[2] = globalY - row + 3;
+                }
+            }
+        }
+
         trackAngleCentral = Math.atan2(((3 + globalY - nearestCentral[2] + 0.5) * blockHeight) - playerY, ((nearestCentral[1] - globalX + 3 + 0.5) * blockWidth) - playerX)
         trackAngleBase = Math.atan2(((3 + globalY - nearestBase[2] + 0.5) * blockHeight) - playerY, ((nearestBase[1] - globalX + 3 + 0.5) * blockWidth) - playerX)
 
@@ -1117,11 +1172,11 @@ function closeMarket() {
 }
 
 requestAnimationFrame(animate);
-let decreaseTimer = 5000;
+let decreaseTimer = 4000;
 function decreaseHealth() {
     if (systemHealth > 0 && isPlay && !isStart && !isHackMode) {
         systemHealth -= 1;
-        decreaseTimer = Math.max(500, 5000 - 9 * timeElapsed);
+        decreaseTimer = Math.max(750, 4000 - 9 * timeElapsed);
     }
     setTimeout(decreaseHealth, decreaseTimer);
 }
@@ -1134,7 +1189,7 @@ setInterval(() => {
         playerScore += 0.5;
         timeElapsed += 1;
     }
-    botGenerateTimer = Math.max(3, 8 - Math.floor(timeElapsed / 120));
+    botGenerateTimer = Math.max(2, 8 - Math.floor(timeElapsed / 80));
 
     if (isInvisible) {
         isInvisible--;
@@ -1202,28 +1257,6 @@ let isInventory = false;
 
 let distance, worldData, trackAngleCentral, trackAngleBase, nearestCentral, nearestBase;
 const trackArrowDistance = 4.5 * remInPx;
-function tracker() {
-    if (isTracking) {
-        nearestCentral = [16 * blockWidth, 0, 0];
-        nearestBase = [16 * blockWidth, 0, 0];
-        for (let column = 0; column < nColumns; column++) {
-            for (let row = 0; row < nRows; row++) {
-                worldData = global.get(`${globalX + column - 3}, ${globalY - row + 3}`)
-                distance = Math.sqrt((column * blockWidth - playerX) ** 2 + (row * blockHeight - playerY) ** 2)
-                if (worldData.type === 'central' && distance < nearestCentral[0]) {
-                    nearestCentral[0] = distance;
-                    nearestCentral[1] = globalX + column - 3;
-                    nearestCentral[2] = globalY - row + 3;
-                } else if (worldData.type === 'base' && distance < nearestBase[0]) {
-                    nearestBase[0] = distance;
-                    nearestBase[1] = globalX + column - 3;
-                    nearestBase[2] = globalY - row + 3;
-                }
-            }
-        }
-        requestAnimationFrame(tracker)
-    }
-}
 
 let inventoryItems = [0, 0, 0, 0, 0, 0]
 function getItems(idx) {
@@ -1249,8 +1282,8 @@ function getItems(idx) {
 function usePowerup(idx) {
     if (isPlay && !isStart) {
         if (idx === 0) {
-            nearestCentral = [16 * blockWidth, 0, 0];
-            nearestBase = [16 * blockWidth, 0, 0];
+            nearestCentral = [32 * blockWidth, 0, 0];
+            nearestBase = [32 * blockWidth, 0, 0];
             isTracking = 60;
         }
         else if (idx === 1) {
@@ -1341,7 +1374,7 @@ function Restart() {
     isInvisible = 0;
     isMagnet = 0;
     isTracking = 0;
-    decreaseTimer = 5000;
+    decreaseTimer = 4000;
     timeElapsed = 0;
     botGenerateTimer = 8;
     playerLookAngle = 3 * Math.PI / 2
@@ -1652,3 +1685,14 @@ hackMode.addEventListener("click", () => {
     isHack = true;
     hackMode.blur();
 })
+
+function isMobileDevice() {
+    return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+window.addEventListener("load", () => {
+    if (isMobileDevice()) {
+        isPlay = false;
+        document.getElementById("mobile-warning").style.display = "block";
+    }
+});
