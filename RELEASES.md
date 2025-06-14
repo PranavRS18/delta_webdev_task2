@@ -106,3 +106,7 @@
 * Reverted Teleportation Pods to Original Price
 * Reverted EMP Blast to Original Price
 * More Shards are needed over time to increase System Health
+
+### v2.4.4.1
+* Minor Changes to v2.4.4
+* Introduced a Secret Feature for a potential future update.

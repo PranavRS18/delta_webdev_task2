@@ -111,6 +111,7 @@ let keyRadius = buildingWidth / 12;
 let keys = [];
 let blockKeys = [];
 let systemHealth = 200;
+let maxSystemHealth = 250;
 const magnetSpeed = 0.3 * remInPx;
 
 function createKeys() {
@@ -375,7 +376,7 @@ function shardsToHealth(rectX, rectY) {
         playerY > rectY - playerRadius && playerY < rectY + rectHeight + playerRadius) {
         if (playerShards && systemHealth < 250) {
             playerShards--;
-            systemHealth = Math.min(systemHealth + Math.max(10 - timeElapsed / 200, 4), 250);
+            systemHealth = Math.min(systemHealth + Math.max(10 - Math.floor(timeElapsed / 200), 4), maxSystemHealth);
             if (!isHackMode) playerScore += 15;
         };
     }
@@ -1210,6 +1211,11 @@ setInterval(() => {
             dataShards.push([dataMines[idx][0], dataMines[idx][1], dataMines[idx][2] + dataRandom * playerRadius, dataMines[idx][3] + dataRandom * playerRadius * 2]);
         }
     })
+
+    if (timeElapsed > 1319) {
+        maxSystemHealth = 300
+    }
+
 }, 1000)
 
 let factoryX, factoryY, botGenerate
