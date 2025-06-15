@@ -110,3 +110,6 @@
 ### v2.4.4.1
 * Minor Changes to v2.4.4
 * Introduced a Secret Feature for a potential future update.
+
+### v2.4.4.2
+* Minor Bug Fixes

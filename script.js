@@ -1274,12 +1274,10 @@ function getItems(idx) {
             }
         } else if (idx === 5) {
             ammoDamage += 1;
-            if (!isHackMode) {
-                itemPrices[5] += 20;
-            }
+            if (!isHackMode) itemPrices[5] += 20;
         } else if (idx > 5) {
             inventoryItems[idx - 2] += 1;
-            itemPrices[idx] = Math.min(itemPrices[idx] + 5, 40)
+            if (!isHackMode) itemPrices[idx] = Math.min(itemPrices[idx] + 5, 40)
         }
     }
 }
@@ -1394,15 +1392,22 @@ function Restart() {
     cameraX = blockWidth - (5 * blockWidth * (cameraScale - 1)) / 2;
     cameraY = blockHeight * 2 - (3 * blockHeight * (cameraScale - 1)) / 2;
     bots = [];
+    dataMines = [];
+    dataShards = [];
+    teleports = [];
+    renderedBuildings = [];
     damagedBuilding = [];
     ammoCapacity = 5;
     ammoDamage = 1;
     isInventory = false;
     isShiftPressed = false;
+    isTeleportIn = false;
+    isMarket = false;
+    isShiftPressed = false;
     inventoryItems = [0, 0, 0, 0, 0, 0]
 
     if (!isHackMode) {
-        itemPrices = [3, 5, 7, 10, 10, 15, 0, 0]
+        itemPrices = [3, 5, 7, 10, 10, 15, 15, 20]
     } else {
         itemPrices = [0, 0, 0, 0, 0, 0, 0, 0]
     }
