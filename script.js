@@ -1287,7 +1287,7 @@ function usePowerup(idx) {
         if (idx === 0) {
             nearestCentral = [32 * blockWidth, 0, 0];
             nearestBase = [32 * blockWidth, 0, 0];
-            isTracking = 60;
+            isTracking += 30;
         }
         else if (idx === 1 && playerHealth < 100) {
             playerHealth = Math.min(playerHealth + 20, 100);
@@ -1295,10 +1295,10 @@ function usePowerup(idx) {
             inventoryItems[1]++;
         }
         else if (idx === 2) {
-            isMagnet = 15;
+            isMagnet += 15;
         }
         else if (idx === 3) {
-            isEMPBlast = 25;
+            isEMPBlast += 25;
             bots = [];
         }
         else if (idx === 6) {

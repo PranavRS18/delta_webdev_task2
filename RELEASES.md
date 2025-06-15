@@ -113,3 +113,6 @@
 
 ### v2.4.4.2
 * Minor Bug Fixes
+
+### v2.5
+* Made Powerups Stack to make the game easier.
